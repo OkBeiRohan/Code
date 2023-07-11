@@ -20,7 +20,12 @@ int main()
     printf("Enter the value of n: ");
     scanf("%d", &n);
     for (int i = 1; i <= n; i++)
-        sum += factorial(i) / (n - i + 1);
-    printf("Sum = %lf", sum);
+    {
+        if (i != 1)
+            printf(" + ");
+        printf("%d!/(%d - %d)", i, n, i - 1);
+        sum += factorial(i) / (n - (i - 1));
+    }
+    printf(" = %lf", sum);
     return 0;
 }
