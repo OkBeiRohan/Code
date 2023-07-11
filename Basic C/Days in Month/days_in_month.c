@@ -31,7 +31,7 @@ int main()
         printf("Invalid input! Please enter month number between 1-12.");
         return 0;
     }
-    if (m == 2)
+    if (m == February)
     {
         printf("Enter year: ");
         scanf("%d", &year);
