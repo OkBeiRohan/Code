@@ -35,6 +35,8 @@ void display_polynomial(struct polynomial *p, int n)
             continue;
         if (p[i].coeff != 1)
             printf("%d", p[i].coeff);
+        if (p[i].coeff == -1 && p[i].degree != 0)
+            printf("-");
         if (p[i].degree != 0)
             printf("x^%d", p[i].degree);
         if (i != n - 1)
