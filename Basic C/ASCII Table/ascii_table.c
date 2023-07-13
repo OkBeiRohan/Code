@@ -10,6 +10,6 @@ int main()
     printf("\tASCII table from 'a' to 'z'\n\n");
     printf("Decimal\t\tASCII\t\tHexadecimal\n");
     for (c = 'a'; c <= 'z'; c++)
-        printf("%d\t\t%c\t\t%x\n", c, c, c);
+        printf("%d\t\t%c\t\t%x\n", c, c, c); // Print decimal, ASCII and hexadecimal values
     return 0;
 }

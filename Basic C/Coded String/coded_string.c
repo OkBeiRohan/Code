@@ -1,5 +1,5 @@
 /**
- * Convert a string into coded with +3 ASCII character
+ * Encode a string
  */
 
 #include <stdio.h>
@@ -11,10 +11,10 @@ int main()
     int i;
     printf("Enter a string: ");
     gets(str);
-    for (i = 0; str[i] != '\0'; i++)
+    for (i = 0; str[i] != '\0'; i++) // Iterate till the string ends
     {
-        str[i] = str[i] + 3;
+        str[i] = str[i] + 3; // Add 3 to each character
     }
-    printf("Encoded string: %s", str);
+    printf("Encoded string: %s", str); // Print the encoded string
     return 0;
 }
