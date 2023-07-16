@@ -1,5 +1,19 @@
 /**
  * Calculator
+ * 
+ * Algorithm:
+ * 1. Clear the screen
+ * 2. Print menu
+ * 3. Take choice as input
+ * 4. If choice is 5, exit
+ * 5. If choice is invalid, print error and goto step 1
+ * 6. Take two numbers as input
+ * 7. If choice is 1, add the numbers and print
+ * 8. If choice is 2, subtract the numbers and print
+ * 9. If choice is 3, multiply the numbers and print
+ * 10. If choice is 4, divide the numbers and print
+ * 11. Goto step 1
+ * 12. Stop
  */
 
 #include <stdio.h>

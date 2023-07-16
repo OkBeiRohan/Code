@@ -1,5 +1,12 @@
 /**
  * To Uppercase
+ *
+ * Algorithm:
+ * 1. Take a string as input
+ * 2. Loop through the string
+ * 3. If the character is lowercase, subtract 32 from it
+ * 4. Print the string
+ * 5. Stop
  */
 
 #include <stdio.h>

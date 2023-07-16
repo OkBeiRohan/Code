@@ -1,5 +1,22 @@
 /**
  * Sum of two polynomials
+ *
+ * Algorithm:
+ * 1. Start
+ * 2. Take the input of the number of terms in the first polynomial
+ * 3. Take the input of the coefficients and degrees of the terms of the first polynomial
+ * 4. Sort the terms of the first polynomial in descending order of degrees
+ * 5. Take the input of the number of terms in the second polynomial
+ * 6. Take the input of the coefficients and degrees of the terms of the second polynomial
+ * 7. Sort the terms of the second polynomial in descending order of degrees
+ * 8. Find the number of terms in the sum of the two polynomials
+ * 9. Create a new polynomial with the number of terms found in the previous step
+ * 10. Add the coefficients of the terms with the same degree in the two polynomials and store the sum in the new polynomial
+ * 11. Add the terms of the first polynomial which are not present in the second polynomial to the new polynomial
+ * 12. Add the terms of the second polynomial which are not present in the first polynomial to the new polynomial
+ * 13. Sort the terms of the new polynomial in descending order of degrees
+ * 14. Display the sum of the two polynomials
+ * 15. Stop
  */
 
 #include <stdio.h>

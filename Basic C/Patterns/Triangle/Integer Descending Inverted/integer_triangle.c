@@ -4,6 +4,16 @@
  *  3 3 3
  *   2 2
  *    1
+ *
+ * Algorithm:
+ * 1. Take a number as input
+ * 2. Loop from n to 1
+ * 3. Loop from 1 to n-i
+ * 4. Print space
+ * 5. Loop from 1 to i
+ * 6. Print i
+ * 7. Print newline
+ * 8. Stop
  */
 
 #include <stdio.h>

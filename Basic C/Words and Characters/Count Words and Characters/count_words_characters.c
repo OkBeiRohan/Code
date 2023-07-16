@@ -1,5 +1,12 @@
 /**
  * Count number of words and characters
+ * 
+ * Algorithm:
+ * 1. Take a string as input
+ * 2. If a space is encountered and the next character is not null and the previous character is not a space, increment word count
+ * 3. Increment character count
+ * 4. Print word count and character count
+ * 5. Stop
  */
 
 #include <stdio.h>

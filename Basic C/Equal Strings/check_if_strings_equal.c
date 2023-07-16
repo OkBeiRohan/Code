@@ -1,5 +1,13 @@
 /**
  * Check if two strings are equal
+ *
+ * Algorithm:
+ * 1. Take two strings as input
+ * 2. Compare each character of both strings
+ * 3. If any character is not equal, set flag to 1 and break
+ * 4. If flag is 0, print strings are equal
+ * 5. Else print strings are not equal
+ * 6. Stop
  */
 
 #include <stdio.h>
