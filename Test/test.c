@@ -1,58 +1,42 @@
-/**
- * Program to count the first largest occurrence of a character in a string
- * Example:
- * Input: safafsfa
- * Output: f, count = 3
- */
-
 #include <stdio.h>
 #include <string.h>
 
-int isInString(char c, char *str)
+void reverse(char *str, int start, int end)
 {
-    for (int i = 0; str[i] != '\0'; i++)
-        if (c == str[i])
-            return i;
-    return 0;
+    while (start < end)
+    {
+        char temp = str[start];
+        str[start] = str[end];
+        str[end] = temp;
+
+        start++;
+        end--;
+    }
 }
 
 int main()
 {
-    char str[100], maxCount[26], max_char;
-    int count[26] = {0}, max = 0, k = 0, pos = 0, maxC[26] = {0};
-
+    char str[100];
     printf("Enter a string: ");
-    scanf("%s", str);
+    gets(str);
 
-    for (int i = 0; str[i] != '\0'; i++)
-        count[str[i] - 'a']++;
+    int start = 0;
+    int end = 0;
 
-    for (int i = 0; i < 26; i++)
-        if (count[i] > max)
-        {
-            max = count[i];
-            max_char = i + 'a';
-        }
-    for (int i = 0; i < 26; i++)
-        if (max == count[i])
-        {
-            maxCount[k] = i + 'a';
-            k++;
-        }
-    for (int i = 0; str[i] != '\0'; i++)
+    while (str[end] != '\0')
     {
-        pos = isInString(str[i], maxCount);
-        if (pos)
+        if (str[end] == ' ')
         {
-            maxC[pos]++;
-            if (maxC[pos] == max)
-            {
-                max_char = str[i];
-                break;
-            }
+            reverse(str, start, end - 1);
+            start = end + 1;
         }
+
+        end++;
     }
 
-    printf("%c, count = %d\n", max_char, max);
+    reverse(str, start, end - 1);
+
+    printf("%s\n", str);
+
     return 0;
 }
