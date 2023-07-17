@@ -1,5 +1,5 @@
 /**
- * Set Bit in the Given Position
+ * Set 2 non consecutive bits of a number
  */
 
 #include <stdio.h>
@@ -21,12 +21,14 @@ int toBinary(int num)
 
 int main()
 {
-    int num, pos, res, res_neg;
+    int num, pos1, pos2, res, res_neg;
 
     printf("Enter the number: ");
     scanf("%d", &num);
-    printf("Enter the position: ");
-    scanf("%d", &pos);
+    printf("Enter the position 1: ");
+    scanf("%d", &pos1);
+    printf("Enter the position 2: ");
+    scanf("%d", &pos2);
 
     /**
      * The bitwise OR operator (|) sets the bit to 1 if either of the bits is 1.
@@ -38,8 +40,8 @@ int main()
      */
 
     int consective_bits = 0x01;
-    res = num | (consective_bits << pos);
-    res_neg = num & ~(consective_bits << pos);
+    res = num | (consective_bits << pos1) | (consective_bits << pos2);
+    res_neg = num & ~(consective_bits << pos1) & ~(consective_bits << pos2);
 
     /**
      * For setting two consecutive bits, use 0x03 instead of 0x01. For setting three consecutive bits, use 0x07 instead of 0x01.
@@ -48,7 +50,8 @@ int main()
     printf("Decimal Result: %d\nNegation Result: %d\n\nBinary\n", res, res_neg);
 
     printf("Number: %d\n", toBinary(num));
-    printf("Position: %d\n", toBinary(consective_bits << pos));
+    printf("Position 1: %d\n", toBinary(consective_bits << pos1));
+    printf("Position 2: %d\n", toBinary(consective_bits << pos2));
     printf("Result: %d\n", toBinary(res));
     printf("Negation Result: %d\n", toBinary(res_neg));
 }
