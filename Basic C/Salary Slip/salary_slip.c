@@ -1,5 +1,20 @@
 /**
  * Program to generate salary slip
+ *
+ * Algorithm:
+ * 1. Start
+ * 2. Take employee details as input
+ * 3. Calculate salary details
+ *      a. Calculate HRA
+ *     b. Calculate DA
+ *    c. Calculate PF
+ *  d. Calculate Gross Salary
+ * e. Calculate Taxable Income
+ * f. Calculate Yearly Tax
+ * g. Calculate Monthly Tax
+ * h. Calculate Net Pay
+ * 4. Print salary slip
+ * 5. Stop
  */
 
 #include <stdio.h>
