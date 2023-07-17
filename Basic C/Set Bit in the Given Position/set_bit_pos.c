@@ -28,11 +28,25 @@ int main()
     printf("Enter the position: ");
     scanf("%d", &pos);
 
-    res = num | (0x01 << pos);
+    /**
+     * The bitwise OR operator (|) sets the bit to 1 if either of the bits is 1.
+     *
+     * 0x01 is 0000 0001.
+     * Left shifting to required position will set the bit to 1. (Eg: If position is 3, 0x01 << 3 = 0000 1000)
+     * Now ORing the number with the shifted value will set the bit to 1.
+     * (Eg: If number is 5, 0000 0101 | 0000 1000 = 0000 1101)
+     */
 
-    printf("Result: %d\n\n", res);
+    int consective_bits = 0x01;
+    res = num | (consective_bits << pos);
+
+    /**
+     * For setting two consecutive bits, use 0x03 instead of 0x01. For setting three consecutive bits, use 0x07 instead of 0x01.
+     */
+
+    printf("Decimal Result: %d\n\nBinary\n", res);
 
     printf("Number: %d\n", toBinary(num));
-    printf("Position: %d\n", pos);
+    printf("Position: %d\n", toBinary(consective_bits << pos));
     printf("Result: %d\n", toBinary(res));
 }
