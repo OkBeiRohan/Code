@@ -1,19 +1,16 @@
 #include <stdio.h>
 
-struct status
+struct test
 {
-    int ON;
-    int OFF;
+    int id;
+    char name[13];
 };
 
-struct name
+int main()
 {
-    int ON : 1;
-    int OFF : 1;
-};
-
-int main(void)
-{
-    printf("%ld\n", sizeof(struct status));
-    printf("%ld", sizeof(struct name));
+    struct test t, *t_ptr;
+    t_ptr = &t;
+    printf("%d\n", sizeof(t));
+    printf("%d\n", t_ptr);
+    printf("%d\n", ++t_ptr);
 }
