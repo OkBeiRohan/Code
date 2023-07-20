@@ -50,8 +50,10 @@ void display_list()
     node *temp = head;
     while (temp != NULL)
     {
-        printf("%d -> ", temp->data);
+        printf("%d", temp->data);
         temp = temp->next;
+
+        if (temp != NULL)
+            printf(" -> ");
     }
-    printf("NULL\n");
 }
