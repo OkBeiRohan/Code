@@ -13,6 +13,7 @@ void create_node(int);
 void delete_node(int);
 void insert_node(int, int);
 void display_list();
+void display_list_reverse();
 int find_node(int);
 
 int main()
@@ -29,6 +30,9 @@ int main()
 
     printf("\nThe linked list is: ");
     display_list();
+
+    printf("\n\nThe linked list in reverse is: ");
+    display_list_reverse();
 
     printf("\n\nEnter the position of the node to search: ");
     scanf("%d", &n);
@@ -121,8 +125,24 @@ void display_list()
     node *temp = head;
     while (temp != NULL)
     {
-        printf("%d ", temp->data);
+        printf("%d", temp->data);
         temp = temp->next;
+
+        if (temp != NULL)
+            printf(" <-> ");
+    }
+}
+
+void display_list_reverse()
+{
+    node *temp = tail;
+    while (temp != NULL)
+    {
+        printf("%d", temp->data);
+        temp = temp->prev;
+
+        if (temp != NULL)
+            printf(" <-> ");
     }
 }
 
