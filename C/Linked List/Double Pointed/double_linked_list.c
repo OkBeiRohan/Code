@@ -11,6 +11,7 @@ typedef struct node_s node;
 
 void create_node(int);
 void delete_node(int);
+void insert_node(int, int);
 void display_list();
 int find_node(int);
 
@@ -37,6 +38,14 @@ int main()
     scanf("%d", &n);
     delete_node(n);
     printf("The linked list after deletion is: ");
+    display_list();
+
+    printf("\n\nEnter the position of the node to insert: ");
+    scanf("%d", &n);
+    printf("Enter the data to insert: ");
+    scanf("%d", &data);
+    insert_node(n, data);
+    printf("The linked list after insertion is: ");
     display_list();
 
     return 0;
@@ -79,6 +88,31 @@ void delete_node(int pos)
         temp->next = temp2->next;
         temp2->next->prev = temp;
         free(temp2);
+    }
+}
+
+void insert_node(int pos, int data)
+{
+    node *new_node = (node *)malloc(sizeof(node));
+    new_node->data = data;
+    new_node->next = NULL;
+    new_node->prev = NULL;
+
+    if (pos == 1)
+    {
+        new_node->next = head;
+        head->prev = new_node;
+        head = new_node;
+    }
+    else
+    {
+        node *temp = head;
+        for (int i = 1; i < pos - 1; i++)
+            temp = temp->next;
+        new_node->next = temp->next;
+        new_node->prev = temp;
+        temp->next = new_node;
+        new_node->next->prev = new_node;
     }
 }
 
