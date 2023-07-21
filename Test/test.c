@@ -1,16 +1,26 @@
 #include <stdio.h>
 
-struct test
+struct date
 {
-    int id;
-    char name[13];
+    int dd : 5;
+    int mm : 4;
+    // int yy;
 };
+
+union test
+{
+    int a;
+    float b;
+} t;
 
 int main()
 {
-    struct test t, *t_ptr;
-    t_ptr = &t;
-    printf("%d\n", sizeof(t));
-    printf("%d\n", t_ptr);
-    printf("%d\n", ++t_ptr);
+    printf("Size of date: %d\n", sizeof(struct date));
+    printf("Size of test: %d\n", sizeof(union test));
+
+    t.a = 10;
+    printf("t.a = %d\n", t.a);
+    t.b = 20.5;
+    printf("t.b = %f\n", t.b);
+    printf("t.a = %d\n", t.a);
 }

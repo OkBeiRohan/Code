@@ -1,5 +1,14 @@
 /**
  * Sum of two matrices
+ * 
+ * Algorithm:
+ * 1. Start
+ * 2. Input the number of rows and columns of the matrices
+ * 3. Input the elements of the first matrix
+ * 4. Input the elements of the second matrix
+ * 5. Add each element of the first matrix with the corresponding element of the second matrix and store the sum in another matrix
+ * 6. Display all three matrices
+ * 7. Stop
  */
 
 #include <stdio.h>
