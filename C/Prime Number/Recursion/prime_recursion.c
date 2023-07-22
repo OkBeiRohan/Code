@@ -3,16 +3,15 @@
  */
 
 #include <stdio.h>
-#include <stdbool.h>
 
-bool prime(int n, int i)
+int prime(int n, int i)
 {
     if (n <= 2)
-        return (n == 2) ? true : false;
+        return (n == 2) ? 1 : 0;
     if (n % i == 0)
-        return false;
+        return 0;
     if (n == (i + 1))
-        return true;
+        return 1;
     return prime(n, i + 1);
 }
 
