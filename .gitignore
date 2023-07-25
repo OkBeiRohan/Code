@@ -71,3 +71,11 @@ dkms.conf
 # Visual Studio Code
 .vscode/
 build/
+
+# STM 32
+.settings/
+Debug/
+.project
+.cproject
+*.launch
+*.ld
