@@ -17,7 +17,7 @@ T sum(T a, T b)    // template function with typename T
 }
 
 /**
- * Inputs two types of data and returns the sum in the first type of data
+ * Inputs two types of data and returns the sum in the type of the first parameter
  */
 template <class U, class V>
 U sum(U a, V b)
@@ -44,6 +44,26 @@ void add(T a, U b)
 //     return a + b;
 // }
 
+// Template Class
+template <class T>
+class mypair
+{
+    T a, b;
+
+public:
+    mypair(T first, T second)
+    {
+        a = first;
+        b = second;
+    }
+    T getmax()
+    {
+        T max;
+        max = a > b ? a : b;
+        return max;
+    }
+};
+
 int main()
 {
     cout << "Template Function: " << sum(1, 2) << endl; // template function call
@@ -57,5 +77,14 @@ int main()
     add(1.1, 2.2);
     add(11, 2.2);
     add('A', 'b');
+
+    cout << "Using template class: " << endl;
+
+    mypair<int> myobj(100, 75);
+    cout << "Max of 100, 75 is " << myobj.getmax() << endl;
+
+    mypair<char> myobj2('A', 'B');
+    cout << "Max of A, B is " << myobj2.getmax() << endl;
+
     return 0;
 }
