@@ -74,7 +74,9 @@ build/
 
 # STM 32
 .settings/
+.metadata/
 Debug/
+Startup/
 .project
 .cproject
 *.launch
