@@ -60,7 +60,9 @@ int main(void)
 }
 
 /**
- *
+ * Function to blink the LED
+ * @param ptr_GPIOC_ODR Pointer to the GPIOC_ODR register
+ * @return None
  */
 void blink_led(uint32_t *ptr_GPIOC_ODR)
 {
@@ -93,6 +95,11 @@ void blink_led(uint32_t *ptr_GPIOC_ODR)
     }
 }
 
+/**
+ * Function to generate delay
+ * @param delay_ms Delay in milliseconds
+ * @return None
+ */
 void delay(uint32_t delay_ms)
 {
     uint32_t counter;
