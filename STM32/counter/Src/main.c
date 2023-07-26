@@ -20,11 +20,23 @@
 
 #include <stdint.h>
 
+void init();
+void config();
 void counter(uint32_t *, uint32_t *, uint32_t *);
 void trigger_buzzer(uint32_t *, uint8_t);
 void delay(uint32_t);
 
+uint32_t *ptr_GPIOA_IDR, *ptr_RCC_AHB1ENR, *ptr_GPIOC_MODER, *ptr_GPIOB_MODER, *ptr_GPIOC_ODR, *ptr_GPIOB_ODR;
+
 int main(void)
+{
+  init();
+  config();
+
+  counter(ptr_GPIOC_ODR, ptr_GPIOB_ODR, ptr_GPIOA_IDR);
+}
+
+void init()
 {
   /**
    * To blink LED, enable the clock for the General Purpose I/O (GPIO) ports C and B.
@@ -34,9 +46,7 @@ int main(void)
    * For LED1, Port PC6 have to be enabled. For that enable GPIOCEN bit. (At 2nd position)
    * For LED2, LED3, and LED4, Port PB13, PB14, and PB15 have to be enabled. For that enable GPIOBEN bit. (At 1st position)
    */
-  uint32_t *ptr_RCC_AHB1ENR = (uint32_t *)0x40023830;
-  *ptr_RCC_AHB1ENR |= (1 << 2); // Set bit 2 (GPIOCEN)
-  *ptr_RCC_AHB1ENR |= (1 << 1); // Set bit 1 (GPIOBEN)
+  ptr_RCC_AHB1ENR = (uint32_t *)0x40023830;
 
   /**
    * Set the mode of the pin PC9 to output mode. (For buzzer)
@@ -46,9 +56,7 @@ int main(void)
    * For buzzer, Pin PC6 have to be set to output mode. For that set GPIOC6 bit. (At 12th position)
    * Output Mode = 01
    */
-  uint32_t *ptr_GPIOC_MODER = (uint32_t *)0x40020800;
-  *ptr_GPIOC_MODER |= (1 << 18);  // Set bit 18
-  *ptr_GPIOC_MODER &= ~(1 << 19); // Clear bit 19
+  ptr_GPIOC_MODER = (uint32_t *)0x40020800;
 
   /**
    * Set the mode of the pins PC6, PB13, PB14, and PB15 to output mode.
@@ -64,10 +72,47 @@ int main(void)
    *
    * Output Mode = 01
    */
+  ptr_GPIOB_MODER = (uint32_t *)0x40020400;
+
+  /**
+   * Change the output bit through the port PC6 using the Output Data Register (ODR) (For buzzer)
+   * Base address of the GPIO port C = 0x4002 0800
+   * Offset address of the mode register = 0x14
+   * Address = 0x4002 0814
+   * For turning the buzzer ON, reset the ODR6 bit. For turning it OFF, set the ODR6 bit
+   *
+   * Change the output bit through the ports using the Output Data Register (ODR)
+   * Base address of the GPIO port C = 0x4002 0800
+   * Base address of the GPIO port B = 0x4002 0400
+   * Offset address of the mode register = 0x14
+   * Address for port C= 0x4002 0814
+   * Address for port B= 0x4002 0414
+   * For turning the LED ON, reset the ODR6 bit. For turning it OFF, set the ODR6 bit
+   */
+  ptr_GPIOC_ODR = (uint32_t *)0x40020814;
+  ptr_GPIOB_ODR = (uint32_t *)0x40020414;
+
+  /**
+   * Read the input bit through the port PB7 using the Input Data Register (IDR)
+   * Base address of the GPIO port B = 0x4002 0400
+   * Offset address of the mode register = 0x10
+   * Address = 0x4002 0010
+   * For reading the input bit, read the IDR7 bit. (At 7th position)
+   */
+  ptr_GPIOA_IDR = (uint32_t *)0x40020410;
+}
+
+void config()
+{
+  *ptr_RCC_AHB1ENR |= (1 << 2); // Set bit 2 (GPIOCEN)
+  *ptr_RCC_AHB1ENR |= (1 << 1); // Set bit 1 (GPIOBEN)
+
+  *ptr_GPIOC_MODER |= (1 << 18);  // Set bit 18
+  *ptr_GPIOC_MODER &= ~(1 << 19); // Clear bit 19
+
   *ptr_GPIOC_MODER |= (1 << 12);  // Set bit 12
   *ptr_GPIOC_MODER &= ~(1 << 13); // Clear bit 13
 
-  uint32_t *ptr_GPIOB_MODER = (uint32_t *)0x40020400;
   *ptr_GPIOB_MODER |= (1 << 26);  // Set bit 26
   *ptr_GPIOB_MODER &= ~(1 << 27); // Clear bit 27
   *ptr_GPIOB_MODER |= (1 << 28);  // Set bit 28
@@ -86,35 +131,6 @@ int main(void)
 
   *ptr_GPIOB_MODER &= ~(1 << 15); // Clear bit 15
   *ptr_GPIOB_MODER &= ~(1 << 14); // Clear bit 14
-
-  /**
-   * Change the output bit through the port PC6 using the Output Data Register (ODR) (For buzzer)
-   * Base address of the GPIO port C = 0x4002 0800
-   * Offset address of the mode register = 0x14
-   * Address = 0x4002 0814
-   * For turning the buzzer ON, reset the ODR6 bit. For turning it OFF, set the ODR6 bit
-   *
-   * Change the output bit through the ports using the Output Data Register (ODR)
-   * Base address of the GPIO port C = 0x4002 0800
-   * Base address of the GPIO port B = 0x4002 0400
-   * Offset address of the mode register = 0x14
-   * Address for port C= 0x4002 0814
-   * Address for port B= 0x4002 0414
-   * For turning the LED ON, reset the ODR6 bit. For turning it OFF, set the ODR6 bit
-   */
-  uint32_t *ptr_GPIOC_ODR = (uint32_t *)0x40020814;
-  uint32_t *ptr_GPIOB_ODR = (uint32_t *)0x40020414;
-
-  /**
-   * Read the input bit through the port PB7 using the Input Data Register (IDR)
-   * Base address of the GPIO port B = 0x4002 0400
-   * Offset address of the mode register = 0x10
-   * Address = 0x4002 0010
-   * For reading the input bit, read the IDR7 bit. (At 7th position)
-   */
-  uint32_t *ptr_GPIOA_IDR = (uint32_t *)0x40020410;
-
-  counter(ptr_GPIOC_ODR, ptr_GPIOB_ODR, ptr_GPIOA_IDR);
 }
 
 /**
