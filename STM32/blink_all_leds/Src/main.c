@@ -21,7 +21,7 @@
 #include <stdint.h>
 
 void blink_led(uint32_t *, uint32_t *);
-void trigger_buzzer(uint32_t *);
+void trigger_buzzer(uint32_t *, uint8_t);
 void delay(uint32_t);
 
 int main(void)
@@ -64,7 +64,6 @@ int main(void)
    *
    * Output Mode = 01
    */
-  uint32_t *ptr_GPIOC_MODER = (uint32_t *)0x40020800;
   *ptr_GPIOC_MODER |= (1 << 12);  // Set bit 12
   *ptr_GPIOC_MODER &= ~(1 << 13); // Clear bit 13
 
@@ -82,10 +81,7 @@ int main(void)
    * Offset address of the mode register = 0x14
    * Address = 0x4002 0814
    * For turning the buzzer ON, reset the ODR6 bit. For turning it OFF, set the ODR6 bit
-   */
-  uint32_t *ptr_GPIOC_ODR = (uint32_t *)0x40020814;
-
-  /**
+   *
    * Change the output bit through the ports using the Output Data Register (ODR)
    * Base address of the GPIO port C = 0x4002 0800
    * Base address of the GPIO port B = 0x4002 0400
@@ -111,17 +107,6 @@ void blink_led(uint32_t *ptr_GPIOC_ODR, uint32_t *ptr_GPIOB_ODR)
   uint8_t led_pattern = 0x00;
 
   /**
-   * Initializing Sound
-   */
-  trigger_buzzer(ptr_GPIOC_ODR);
-  delay(100);
-  trigger_buzzer(ptr_GPIOC_ODR);
-  delay(500);
-  trigger_buzzer(ptr_GPIOC_ODR);
-  delay(100);
-  trigger_buzzer(ptr_GPIOC_ODR);
-
-  /**
    * Blink LEDs indefinitely
    */
   while (1)
@@ -129,9 +114,34 @@ void blink_led(uint32_t *ptr_GPIOC_ODR, uint32_t *ptr_GPIOB_ODR)
     /**
      * Trigger the buzzer
      */
-    trigger_buzzer(ptr_GPIOC_ODR);
-    delay(100);
-    trigger_buzzer(ptr_GPIOC_ODR);
+
+    if (led_pattern == 0x00)
+    {
+      /**
+       * Initializing Sound
+       */
+      trigger_buzzer(ptr_GPIOC_ODR, 1);
+      delay(50);
+      trigger_buzzer(ptr_GPIOC_ODR, 0);
+      delay(100);
+      trigger_buzzer(ptr_GPIOC_ODR, 1);
+      delay(100);
+      trigger_buzzer(ptr_GPIOC_ODR, 0);
+      delay(50);
+      trigger_buzzer(ptr_GPIOC_ODR, 1);
+      delay(50);
+      trigger_buzzer(ptr_GPIOC_ODR, 0);
+    }
+    else if (led_pattern == 0x0F)
+    {
+      trigger_buzzer(ptr_GPIOC_ODR, 1);
+      delay(50);
+      trigger_buzzer(ptr_GPIOC_ODR, 0);
+      delay(100);
+      trigger_buzzer(ptr_GPIOC_ODR, 1);
+      delay(100);
+      trigger_buzzer(ptr_GPIOC_ODR, 0);
+    }
 
     if (led_pattern & (0x01 << 0))
     {
@@ -169,9 +179,18 @@ void blink_led(uint32_t *ptr_GPIOC_ODR, uint32_t *ptr_GPIOB_ODR)
       *ptr_GPIOB_ODR |= (0x01 << 13); // Turn LED4 OFF
     }
 
-    led_pattern++;
-
     delay(1000);
+
+    trigger_buzzer(ptr_GPIOC_ODR, 1);
+    delay(10);
+    trigger_buzzer(ptr_GPIOC_ODR, 0);
+
+    if (led_pattern == 0xFF)
+    {
+      led_pattern == 0x00;
+      continue;
+    }
+    led_pattern++;
   }
 }
 
@@ -180,9 +199,9 @@ void blink_led(uint32_t *ptr_GPIOC_ODR, uint32_t *ptr_GPIOB_ODR)
  * @param ptr_GPIOC_ODR Pointer to the GPIOC_ODR register
  * @return None
  */
-void trigger_buzzer(uint32_t *ptr_GPIOC_ODR)
+void trigger_buzzer(uint32_t *ptr_GPIOC_ODR, uint8_t buzzer_state)
 {
-  if (*ptr_GPIOC_ODR & ~(1 << 9))
+  if (buzzer_state == 0)
   {
     *ptr_GPIOC_ODR &= ~(1 << 9);
   }
