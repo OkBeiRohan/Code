@@ -70,7 +70,7 @@ int main(void)
    * Address = 0x4002 0010
    * For reading the input bit, read the IDR7 bit. (At 7th position)
    */
-  uint32_t *ptr_GPIOA_IDR = (uint32_t *)0x40020010;
+  uint32_t *ptr_GPIOA_IDR = (uint32_t *)0x40020410;
 
   await_button_press(ptr_GPIOC_ODR, ptr_GPIOA_IDR);
 }
@@ -82,7 +82,7 @@ void await_button_press(uint32_t *ptr_GPIOC_ODR, uint32_t *ptr_GPIOA_IDR)
     /**
      * Check if button is pressed
      */
-    if (*ptr_GPIOA_IDR & (1 << 15))
+    if (!(*ptr_GPIOA_IDR & (1 << 7)))
     {
       trigger_buzzer(ptr_GPIOC_ODR);
     }
