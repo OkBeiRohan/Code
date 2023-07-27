@@ -21,9 +21,24 @@
 
 int main(void)
 {
-    lcd_init(0);
-    lcd_print(0, 0, "Hello");
-    lcd_print(0, 1, "World");
+    enum lcd_modes a;
+    char i[2] = "1";
+    lcd_init(BIT_4_MODE);
+    lcd_print(0, 0, "Initializing!");
+    lcd_print(0, 1, "Please Wait...");
+
+    delay(500);
+
+    set_lcd_mode(CLEAR_SCREEN);
+    for (a = 0; a < 12; a++)
+    {
+        lcd_print(0, 0, "Mode ");
+        lcd_print(0, 1, i);
+        set_lcd_mode(a);
+        i[0]++;
+        delay(500);
+        set_lcd_mode(CLEAR_SCREEN);
+    }
 
     return 0;
 }
