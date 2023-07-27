@@ -25,6 +25,7 @@ void config();
 void counter(uint32_t *, uint32_t *, uint32_t *);
 void trigger_buzzer(uint32_t *, uint8_t);
 void delay(uint32_t);
+void set_led(uint8_t);
 
 uint32_t *ptr_GPIOA_IDR, *ptr_RCC_AHB1ENR, *ptr_GPIOC_MODER, *ptr_GPIOB_MODER, *ptr_GPIOC_ODR, *ptr_GPIOB_ODR;
 
@@ -142,78 +143,64 @@ void config()
  */
 void counter(uint32_t *ptr_GPIOC_ODR, uint32_t *ptr_GPIOB_ODR, uint32_t *ptr_GPIOA_IDR)
 {
-  uint8_t led_pattern = 0x00;
+  uint8_t count_number = 0x00;
 
   /**
-   * Start the counter and wait for button
+   * Start the counter and check if button is pressed
    */
   while (1)
   {
     /**
-     * Trigger the buzzer
+     * If Button is pressed down, the value at the IDR7 will be 0. Else, 1
      */
-
     if (!(*ptr_GPIOA_IDR & (1 << 7)))
     {
-      led_pattern++;
-      if (led_pattern == 0x0F)
-      {
-        /**
-         * Initializing Sound
-         */
-        trigger_buzzer(ptr_GPIOC_ODR, 1);
-        delay(50);
-        trigger_buzzer(ptr_GPIOC_ODR, 0);
-        delay(100);
-        trigger_buzzer(ptr_GPIOC_ODR, 1);
-        delay(100);
-        trigger_buzzer(ptr_GPIOC_ODR, 0);
-        delay(50);
-        trigger_buzzer(ptr_GPIOC_ODR, 1);
-        delay(50);
-        trigger_buzzer(ptr_GPIOC_ODR, 0);
-      }
+      count_number++;
+      set_led(count_number);
       trigger_buzzer(ptr_GPIOC_ODR, 1);
       delay(10);
       trigger_buzzer(ptr_GPIOC_ODR, 0);
-      delay(100);
+      delay(200);
     }
+  }
+}
 
-    if (led_pattern & (0x01 << 0))
-    {
-      *ptr_GPIOC_ODR &= ~(0x01 << 6); // Turn LED1 ON
-    }
-    else
-    {
-      *ptr_GPIOC_ODR |= (0x01 << 6); // Turn LED1 OFF
-    }
+void set_led(uint8_t count_number)
+{
+  if (count_number & (0x01 << 0))
+  {
+    *ptr_GPIOC_ODR &= ~(0x01 << 6); // Turn LED1 ON
+  }
+  else
+  {
+    *ptr_GPIOC_ODR |= (0x01 << 6); // Turn LED1 OFF
+  }
 
-    if (led_pattern & (0x01 << 1))
-    {
-      *ptr_GPIOB_ODR &= ~(0x01 << 15); // Turn LED2 ON
-    }
-    else
-    {
-      *ptr_GPIOB_ODR |= (0x01 << 15); // Turn LED2 OFF
-    }
+  if (count_number & (0x01 << 1))
+  {
+    *ptr_GPIOB_ODR &= ~(0x01 << 15); // Turn LED2 ON
+  }
+  else
+  {
+    *ptr_GPIOB_ODR |= (0x01 << 15); // Turn LED2 OFF
+  }
 
-    if (led_pattern & (0x01 << 2))
-    {
-      *ptr_GPIOB_ODR &= ~(0x01 << 14); // Turn LED3 ON
-    }
-    else
-    {
-      *ptr_GPIOB_ODR |= (0x01 << 14); // Turn LED3 OFF
-    }
+  if (count_number & (0x01 << 2))
+  {
+    *ptr_GPIOB_ODR &= ~(0x01 << 14); // Turn LED3 ON
+  }
+  else
+  {
+    *ptr_GPIOB_ODR |= (0x01 << 14); // Turn LED3 OFF
+  }
 
-    if (led_pattern & (0x01 << 3))
-    {
-      *ptr_GPIOB_ODR &= ~(0x01 << 13); // Turn LED4 ON
-    }
-    else
-    {
-      *ptr_GPIOB_ODR |= (0x01 << 13); // Turn LED4 OFF
-    }
+  if (count_number & (0x01 << 3))
+  {
+    *ptr_GPIOB_ODR &= ~(0x01 << 13); // Turn LED4 ON
+  }
+  else
+  {
+    *ptr_GPIOB_ODR |= (0x01 << 13); // Turn LED4 OFF
   }
 }
 
