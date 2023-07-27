@@ -53,10 +53,10 @@ void set_output(GPIO_TypeDef *, uint32_t); // gpio->MODER
 void set_bit(GPIO_TypeDef *, uint32_t);    // gpio->ODR|=(1<<pin)
 void clr_bit(GPIO_TypeDef *, uint32_t);
 void cpl_bit(GPIO_TypeDef *, uint32_t);
-void delay_lcd(uint32_t);
+void delay(uint32_t);
 void lcd_init(uint8_t);
 void lcd_fn(uint8_t, uint8_t);
-void lprint(uint8_t, char *);
+void lcd_print(uint8_t, uint8_t, char *);
 void aprint(uint32_t);
 
 #endif /* LCD_H_ */

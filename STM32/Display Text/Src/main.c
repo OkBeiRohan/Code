@@ -21,4 +21,9 @@
 
 int main(void)
 {
+    lcd_init(0);
+    lcd_print(0, 0, "Hello");
+    lcd_print(0, 1, "World");
+
+    return 0;
 }
