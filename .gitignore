@@ -76,6 +76,7 @@ build/
 .settings/
 .metadata/
 Debug/
+Release/
 Startup/
 .project
 .cproject
