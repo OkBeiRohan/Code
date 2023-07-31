@@ -19,6 +19,8 @@
 #include <stdint.h>
 #include <lcd.h>
 
+uint32_t volatile *ptr_NVIC_IRQ_EN = (uint32_t *)0xE000E100;
+
 void timer2_enable();
 void timer2_disable();
 void timer3_enable();
@@ -50,11 +52,16 @@ void init()
     TIM2->PSC = 16000 - 1;    // Set prescaler to 16000
     TIM2->ARR = 1000 - 1;     // Set auto-reload register to 1000
     TIM2->CNT = 0;            // Set counter to 0
+    TIM2->DIER |= (1 << 0);   // Enable interrupt for TIM2
 
     RCC->APB1ENR |= (1 << 1); // Enable clock for TIM3
     TIM3->PSC = 16000 - 1;    // Set prescaler to 16000
     TIM3->ARR = 1000 - 1;     // Set auto-reload register to 1000
     TIM3->CNT = 0;            // Set counter to 0
+    TIM3->DIER |= (1 << 0);   // Enable interrupt for TIM3
+
+    *ptr_NVIC_IRQ_EN |= (1 << 28); // Enable interrupt for TIM2
+    *ptr_NVIC_IRQ_EN |= (1 << 29); // Enable interrupt for TIM3
 
     /**
      * SW4 and Sw3 in input mode
@@ -134,17 +141,19 @@ void seconds_increment(uint8_t timer)
 
 void timer2_enable()
 {
-    while (1)
-    {
-        TIM2->CR1 |= (1 << 0); // Enable timer
-        while (!(TIM2->SR & (1 << 0)))
-        {
-            check_button();
-        }                       // Wait until UIF flag is set
-        TIM2->CR1 &= ~(1 << 0); // Disable timer
-        TIM2->SR &= ~(1 << 0);  // Clear UIF flag
-        seconds_increment(0);
-    }
+    TIM2->CR1 |= (1 << 0); // Enable timer
+}
+
+void TIM2_IRQHandler()
+{
+    TIM2->SR &= ~(1 << 0); // Clear interrupt flag
+    seconds_increment(0);
+}
+
+void TIM3_IRQHandler()
+{
+    TIM3->SR &= ~(1 << 0); // Clear interrupt flag
+    seconds_increment(1);
 }
 
 void timer2_disable()
@@ -155,18 +164,7 @@ void timer2_disable()
 
 void timer3_enable()
 {
-    while (1)
-    {
-
-        TIM3->CR1 |= (1 << 0); // Enable timer
-        while (!(TIM3->SR & (1 << 0)))
-        {
-            check_button();
-        }                       // Wait until UIF flag is set
-        TIM3->CR1 &= ~(1 << 0); // Disable timer
-        TIM3->SR &= ~(1 << 0);  // Clear UIF flag
-        seconds_increment(1);
-    }
+    TIM3->CR1 |= (1 << 0); // Enable timer
 }
 
 void timer3_disable()
