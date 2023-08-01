@@ -38,7 +38,7 @@ int main(void)
     {
         usart_write('H');
         data = usart_read();
-        lcd_print(0, 1, (char *)data);
+        lcd_print(0, 1, &data);
         usart_write('e');
         usart_write('l');
         usart_write('l');
