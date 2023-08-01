@@ -37,10 +37,11 @@ int main(void)
 void init()
 {
 	lcd_init(BIT_4_MODE);
-	lcd_print(0, 0, "ADC using POT");
-	lcd_print(0, 1, "Value:");
+	lcd_print(0, 0, "POT Value:");
+	lcd_print(0, 1, "LED");
 	RCC->AHB1ENR |= RCC_AHB1ENR_GPIOCEN; // Enable GPIOC clock
 	set_analog(GPIOC, 2);				 // Set PC2 as analog (POT1)
+	set_output(GPIOC, 6);				 // Set PC6 as output (LED1)
 
 	RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable ADC1 clock
 	ADC1->CR2 = 0;						// Disable ADC1
@@ -51,10 +52,20 @@ void init()
 
 void check_pot()
 {
-	lcd_print_int(7, 1, result, 1); // Print ADC value
-	ADC1->CR2 |= 1 << 30;			// Start conversion
+	lcd_print_int(11, 0, result, 1); // Print ADC value
+	ADC1->CR2 |= 1 << 30;			 // Start conversion
 	while (!(ADC1->SR & 1 << 1))
-		;				   // Wait for conversion to complete
-	result = ADC1->DR;	   // Read conversion result
+		;			   // Wait for conversion to complete
+	result = ADC1->DR; // Read conversion result
+	if (result < 2048) // If POT1 value is greater than 2048
+	{
+		set_bit(GPIOC, 6);		// Turn OFF LED1
+		lcd_print(4, 1, "OFF"); // Print "OFF" on LCD
+	}
+	else
+	{
+		clr_bit(GPIOC, 6);		// Turn On LED1
+		lcd_print(4, 1, "ON "); // Print "ON" on LCD
+	}
 	ADC1->SR &= ~(1 << 1); // Clear EOC flag
 }
