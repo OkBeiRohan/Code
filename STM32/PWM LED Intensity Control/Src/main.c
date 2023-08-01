@@ -19,51 +19,66 @@
 #include <stdint.h>
 #include <common.h>
 
+#define TIM_FREQ 16000000
+
 void init_led(void);
-void init_timer(void);
-void init_pwm(void);
+void init_timer();
+void set_duty_cycle(uint32_t, uint32_t, uint32_t);
 
 int main(void)
 {
+    uint32_t duty_cycle = 0;
+
+    lcd_init(BIT_4_MODE);
     init_led();
     init_timer();
-    init_pwm();
+    lcd_print(0, 0, "Duty Cycle:");
+    lcd_print(0, 1, "Check LED1");
 
     while (1)
     {
+        for (duty_cycle = 0; duty_cycle <= 100; duty_cycle += 10)
+        {
+            lcd_print(12, 0, "   ");
+            lcd_print_int(12, 0, duty_cycle);
+            set_duty_cycle(1000, duty_cycle, 1);
+            delay(50);
+        }
+        for (duty_cycle = 100; duty_cycle > 0; duty_cycle -= 10)
+        {
+            lcd_print(12, 0, "   ");
+            lcd_print_int(12, 0, duty_cycle);
+            set_duty_cycle(1000, duty_cycle, 1);
+            delay(50);
+        }
     }
 }
 
 void init_led(void)
 {
-    RCC->AHB1ENR |= (1 << 2); // Enable GPIOC clock
-    set_alternate(GPIOC, 6);  // Set PC6 to alternate function
+    RCC->AHB1ENR |= (1 << 2);   // Enable GPIOC clock
+    set_alternate(GPIOC, 6);    // Set PC6 to alternate function
+    GPIOC->AFR[0] |= (1 << 25); // Links AFRL bits to AF of PC6 (24 and 27 bits to 0010)
 }
 
-void init_timer(void)
+void init_timer()
 {
-    RCC->APB1ENR |= (1 << 0); // Enable TIM2 clock
-    TIM2->PSC = 0;            // Prescaler value
-    TIM2->ARR = 1000;         // Auto-reload value
-    TIM2->CR1 |= (1 << 0);    // Enable TIM2
+    RCC->APB1ENR |= (1 << 1); // Enable TIM3 clock
+    TIM3->PSC = 0;            // Prescaler value
+    TIM3->CNT = 0;
+    // TIM3->ARR = 1000 - 1;  // Auto-reload value
+    TIM3->CCMR1 |= (1 << 3); // Set output compare 1 mode to PWM mode 1
+    TIM3->CCMR1 |= (6 << 4); // PWM mode 1
+    TIM3->CCER |= (3 << 0);  // Capture/Compare 1 output enable
+    TIM3->CR1 |= (1 << 0);   // Enable TIM3
 }
 
-void init_pwm(void)
+void set_duty_cycle(uint32_t freq, uint32_t duty_cycle, uint32_t channel)
 {
-    TIM2->CCMR1 |= (1 << 3); // Set output compare 1 mode to PWM mode 1
-    TIM2->CCMR1 |= (1 << 6); // Set output compare 2 mode to PWM mode 1
-    TIM2->CCMR2 |= (1 << 3); // Set output compare 3 mode to PWM mode 1
-    TIM2->CCMR2 |= (1 << 6); // Set output compare 4 mode to PWM mode 1
-
-    TIM2->CCER |= (1 << 0);  // Enable output compare 1
-    TIM2->CCER |= (1 << 4);  // Enable output compare 2
-    TIM2->CCER |= (1 << 8);  // Enable output compare 3
-    TIM2->CCER |= (1 << 12); // Enable output compare 4
-
-    TIM2->CCR1 = 0; // Set output compare 1 to 0
-    TIM2->CCR2 = 0; // Set output compare 2 to 0
-    TIM2->CCR3 = 0; // Set output compare 3 to 0
-    TIM2->CCR4 = 0; // Set output compare 4 to 0
-
-    TIM2->BDTR |= (1 << 15); // Enable main output
+    TIM3->ARR = (TIM_FREQ / freq) - 1; // Set auto-reload value
+    if (duty_cycle > 100)
+    {
+        duty_cycle = 100;
+    }
+    TIM3->CCR1 = (duty_cycle * ((TIM3->ARR) + 1)) / 100; // Set duty cycle
 }

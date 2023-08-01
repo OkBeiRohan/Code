@@ -26,9 +26,9 @@ void hours_increment();
 void init();
 
 char seconds[3] = "00";
-char minutes[3] = "56";
-char hours[3] = "10";
-uint8_t AM = 1;
+char minutes[3] = "14";
+char hours[3] = "02";
+uint8_t AM = 0;
 
 int main(void)
 {
