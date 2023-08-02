@@ -24,11 +24,15 @@ void spi_gpio_config(void);
 void spi_slave_config(void);
 void communicate(void);
 void send_data(uint8_t data);
+void led_config(void);
+void button_config(void);
+void await_button_press(void);
 uint8_t receive_data(void);
+uint8_t data = 0;
 
 int main(void)
 {
-    lcd_init(BIT_8_MODE);
+    lcd_init(BIT_4_MODE);
 
     lcd_print(0, 0, "Configuring");
     lcd_print(0, 1, "SPI Master");
@@ -37,9 +41,14 @@ int main(void)
     spi_slave_config();
     lcd_print(0, 1, "SPI GPIO  ");
     spi_gpio_config();
+    lcd_print(0, 1, "LED       ");
+    led_config();
+    lcd_print(0, 1, "Button    ");
+    button_config();
 
     set_lcd_mode(CLEAR_SCREEN);
     lcd_print(0, 0, "SPI:");
+    lcd_print(0, 1, "RX:      TX:");
 
     while (1)
     {
@@ -49,70 +58,135 @@ int main(void)
 
 void spi_master_config()
 {
-    RCC->APB2ENR |= (1 << 12); // Enable SPI1 clock
-    SPI1->CR1 |= (1 << 2);     // Master mode
-    SPI1->CR1 |= (1 << 3);     // Baud rate control
-    SPI1->CR1 |= (1 << 11);    // Software slave management
-    SPI1->CR1 |= (1 << 9);     // Internal slave select
-    SPI1->CR1 |= (1 << 8);     // Frame format
-    SPI1->CR1 |= (1 << 1);     // Clock polarity
-    SPI1->CR1 |= (1 << 0);     // Clock phase
-    SPI1->CR1 |= (1 << 6);     // Enable SPI1
+    RCC->APB2ENR |= (1 << 12);        // Enable SPI1 clock
+    SPI1->CR1 |= (1 << 2);            // Master Enable
+    SPI1->CR1 |= (1 << 0) | (1 << 1); // CPHA=1, 	CPOL=1
+    SPI1->CR1 &= ~(7 << 3);           // clear baudrate
+    SPI1->CR1 |= (3 << 3);            // set baudrate by fclk/16
+    SPI1->CR1 &= ~(1 << 7);           // MSB bit first
+    SPI1->CR1 |= (1 << 9);            // Software slave enable
+    SPI1->CR1 |= (1 << 8);            // Internal slave select
+    SPI1->CR1 &= ~(1 << 10);          // Full duplex mode
+    SPI1->CR1 &= ~(1 << 11);          // 8-bit data format
+    SPI1->CR1 &= ~(3 << 12);          // No CRC
+    SPI1->CR1 &= ~(1 << 15);          // unidirectional mode
+    SPI1->CR1 |= (1 << 6);            // SPI Enable
 }
 
 void spi_gpio_config()
 {
-    RCC->AHB2ENR |= (1 << 0); // Enable GPIOA clock
-    GPIOA->MODER &= ~(3 << 8);
-    GPIOA->MODER |= (2 << 8);  // Alternate function mode
-    GPIOA->AFR[1] |= (5 << 0); // AF5 for PA4
-    GPIOA->MODER &= ~(3 << 10);
-    GPIOA->MODER |= (2 << 10); // Alternate function mode
-    GPIOA->AFR[1] |= (5 << 4); // AF5 for PA5
-    GPIOA->MODER &= ~(3 << 12);
-    GPIOA->MODER |= (2 << 12); // Alternate function mode
-    GPIOA->AFR[1] |= (5 << 8); // AF5 for PA6
-    GPIOA->MODER &= ~(3 << 14);
-    GPIOA->MODER |= (2 << 14);  // Alternate function mode
-    GPIOA->AFR[1] |= (5 << 12); // AF5 for PA7
+    /**
+     * SPI 1 GPIO pins
+     * PA5 --> SCK 21
+     * PA6 --> MISO 22
+     * PA7 --> MOSI  23
+     */
+    RCC->AHB1ENR |= (1 << 0);                               // PortA Clock Enable
+    GPIOA->MODER &= ~((3 << 10) | (3 << 12) | (3 << 14));   // clear PA5-PA6
+    GPIOA->MODER |= (2 << 10) | (2 << 12) | (2 << 14);      // Alternate mode
+    GPIOA->OTYPER &= ~(7 << 5);                             // push-pull for PA5-PA7;
+    GPIOA->OSPEEDR &= ~((3 << 10) | (3 << 12) | (3 << 14)); // clear speed select
+    GPIOA->OSPEEDR |= (2 << 10) | (2 << 12) | (2 << 14);    // High speed PA5-PA7
+    GPIOA->AFR[0] &= ~(0xFFF << 20);
+    GPIOA->AFR[0] |= (0x555 << 20); // SPI alternate function PA5-PA7
+    /**
+     * SPI 3 GPIO pins
+     * PB3 --> SCK 55
+     * PB4 --> MISO 56
+     * PB5 --> MOSI 57
+     */
+    RCC->AHB1ENR |= (1 << 1); // PortB Clock Enable
+    GPIOB->MODER &= ~((3 << 6) | (3 << 8) | (3 << 10));
+    GPIOB->MODER |= (2 << 6) | (2 << 8) | (2 << 10);      // Alternate mode
+    GPIOB->OTYPER &= ~(7 << 3);                           // push-pull for PB3-PB5;
+    GPIOB->OSPEEDR &= ~((3 << 6) | (3 << 8) | (3 << 10)); // clear speed select
+    GPIOB->OSPEEDR |= (2 << 6) | (2 << 8) | (2 << 10);    // High speed PB3-PB5
+    GPIOB->AFR[0] &= ~(0xFFF << 12);                      // clear alternate function
+    GPIOB->AFR[0] |= (0x666 << 12);                       // SPI alternate function PB3-PB5
 }
 
 void spi_slave_config()
 {
-    RCC->APB2ENR |= (1 << 0); // Enable GPIOA clock
-    GPIOA->MODER &= ~(3 << 0);
-    GPIOA->MODER |= (2 << 0);  // Alternate function mode
-    GPIOA->AFR[0] |= (5 << 0); // AF5 for PA0
-    GPIOA->MODER &= ~(3 << 2);
-    GPIOA->MODER |= (2 << 2);  // Alternate function mode
-    GPIOA->AFR[0] |= (5 << 4); // AF5 for PA1
-    GPIOA->MODER &= ~(3 << 4);
-    GPIOA->MODER |= (2 << 4);  // Alternate function mode
-    GPIOA->AFR[0] |= (5 << 8); // AF5 for PA2
-    GPIOA->MODER &= ~(3 << 6);
-    GPIOA->MODER |= (2 << 6);   // Alternate function mode
-    GPIOA->AFR[0] |= (5 << 12); // AF5 for PA3
+    RCC->APB1ENR |= (1 << 15);        // SPI3 clock enable
+    SPI3->CR1 &= ~(1 << 2);           // Slave mode enable
+    SPI3->CR1 |= (1 << 0) | (1 << 1); // CPHA=1, 	CPOL=1
+    SPI3->CR1 &= ~(1 << 7);           // MSB bit first
+    SPI3->CR1 |= (1 << 9);            // Software slave enable
+    SPI3->CR1 &= ~(1 << 8);           // clear Internal slave select
+    SPI3->CR1 &= ~(1 << 10);          // Full duplex mode
+    SPI3->CR1 &= ~(1 << 11);          // 8-bit data format
+    SPI3->CR1 &= ~(3 << 12);          // No CRC
+    SPI3->CR1 &= ~(1 << 15);          // unidirectional mode
+    SPI3->CR1 |= (1 << 6);            // SPI Enable
+}
+
+void led_config()
+{
+    RCC->AHB1ENR |= (1 << 2);   // Enable PORT C clock
+    GPIOC->MODER &= ~(3 << 12); // PC6 LED bit 12 and 13
+    GPIOC->MODER |= (1 << 12);  // Pc6 as output
+    GPIOC->OTYPER &= ~(1 << 6); // push pull at PC6
+    // GPIOC->OSPEEDR &= ~(3<<24);	//low speed
+    GPIOC->ODR &= ~(1 << 6); // low PC6
+}
+
+void button_config()
+{
+    RCC->AHB1ENR |= (1 << 0);   // PORTA clock enable
+    GPIOA->MODER &= ~(3 << 30); // PA15 as input
+    // GPIOA->PUPDR &= ~(3<<30);	// no pull up/down
+}
+
+void await_button_press()
+{
+    lcd_print(4, 0, "Press Button");
+    while (GPIOA->IDR & (1 << 15))
+        ; // Wait until button is pressed
 }
 
 void communicate()
 {
-    uint8_t data = 0;
-    send_data(data);
-    data = receive_data();
-    lcd_print_int(4, 0, data, 1);
-    delay(1000);
+    uint8_t rec = 0;
+    await_button_press();
+    lcd_print(4, 0, "Sending     ");
+    lcd_print_int(12, 1, data, 1);
+    send_data(data & 0xFF);
+    lcd_print(4, 0, "Receiving   ");
+    rec = receive_data();
+    lcd_print_int(3, 1, rec, 1);
+    data++;
+    if (data == 0xFF)
+    {
+        data = 0;
+    }
 }
 
 void send_data(uint8_t data)
 {
+    lcd_print(4, 0, "Awaiting    ");
     while (!(SPI1->SR & (1 << 1)))
         ; // Wait until TX buffer is empty
     SPI1->DR = data;
+    lcd_print(4, 0, "Sending     ");
+    while (SPI1->SR & (1 << 7))
+        ; // Wait until SPI is busy
+    lcd_print(4, 0, "Sent        ");
 }
 
 uint8_t receive_data()
 {
-    while (!(SPI1->SR & (1 << 0)))
+    lcd_print(4, 0, "Awaiting    ");
+    while (!(SPI3->SR & (1 << 0)))
         ; // Wait until RX buffer is not empty
-    return SPI1->DR;
+    lcd_print(4, 0, "Received    ");
+    if (SPI3->DR != data)
+    {
+        lcd_print(4, 0, "Data Loss   ");
+        delay(100);
+    }
+    else
+    {
+        GPIOC->ODR ^= (1 << 6); // Toggle LED
+    }
+    return SPI3->DR;
 }
