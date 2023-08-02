@@ -20,12 +20,99 @@
 #include <common.h>
 
 void spi_master_config(void);
+void spi_gpio_config(void);
+void spi_slave_config(void);
+void communicate(void);
+void send_data(uint8_t data);
+uint8_t receive_data(void);
 
 int main(void)
 {
+    lcd_init(BIT_8_MODE);
+
+    lcd_print(0, 0, "Configuring");
+    lcd_print(0, 1, "SPI Master");
+    spi_master_config();
+    lcd_print(0, 1, "SPI Slave ");
+    spi_slave_config();
+    lcd_print(0, 1, "SPI GPIO  ");
+    spi_gpio_config();
+
+    set_lcd_mode(CLEAR_SCREEN);
+    lcd_print(0, 0, "SPI:");
+
+    while (1)
+    {
+        communicate();
+    }
 }
 
 void spi_master_config()
 {
     RCC->APB2ENR |= (1 << 12); // Enable SPI1 clock
+    SPI1->CR1 |= (1 << 2);     // Master mode
+    SPI1->CR1 |= (1 << 3);     // Baud rate control
+    SPI1->CR1 |= (1 << 11);    // Software slave management
+    SPI1->CR1 |= (1 << 9);     // Internal slave select
+    SPI1->CR1 |= (1 << 8);     // Frame format
+    SPI1->CR1 |= (1 << 1);     // Clock polarity
+    SPI1->CR1 |= (1 << 0);     // Clock phase
+    SPI1->CR1 |= (1 << 6);     // Enable SPI1
+}
+
+void spi_gpio_config()
+{
+    RCC->AHB2ENR |= (1 << 0); // Enable GPIOA clock
+    GPIOA->MODER &= ~(3 << 8);
+    GPIOA->MODER |= (2 << 8);  // Alternate function mode
+    GPIOA->AFR[1] |= (5 << 0); // AF5 for PA4
+    GPIOA->MODER &= ~(3 << 10);
+    GPIOA->MODER |= (2 << 10); // Alternate function mode
+    GPIOA->AFR[1] |= (5 << 4); // AF5 for PA5
+    GPIOA->MODER &= ~(3 << 12);
+    GPIOA->MODER |= (2 << 12); // Alternate function mode
+    GPIOA->AFR[1] |= (5 << 8); // AF5 for PA6
+    GPIOA->MODER &= ~(3 << 14);
+    GPIOA->MODER |= (2 << 14);  // Alternate function mode
+    GPIOA->AFR[1] |= (5 << 12); // AF5 for PA7
+}
+
+void spi_slave_config()
+{
+    RCC->APB2ENR |= (1 << 0); // Enable GPIOA clock
+    GPIOA->MODER &= ~(3 << 0);
+    GPIOA->MODER |= (2 << 0);  // Alternate function mode
+    GPIOA->AFR[0] |= (5 << 0); // AF5 for PA0
+    GPIOA->MODER &= ~(3 << 2);
+    GPIOA->MODER |= (2 << 2);  // Alternate function mode
+    GPIOA->AFR[0] |= (5 << 4); // AF5 for PA1
+    GPIOA->MODER &= ~(3 << 4);
+    GPIOA->MODER |= (2 << 4);  // Alternate function mode
+    GPIOA->AFR[0] |= (5 << 8); // AF5 for PA2
+    GPIOA->MODER &= ~(3 << 6);
+    GPIOA->MODER |= (2 << 6);   // Alternate function mode
+    GPIOA->AFR[0] |= (5 << 12); // AF5 for PA3
+}
+
+void communicate()
+{
+    uint8_t data = 0;
+    send_data(data);
+    data = receive_data();
+    lcd_print_int(4, 0, data, 1);
+    delay(1000);
+}
+
+void send_data(uint8_t data)
+{
+    while (!(SPI1->SR & (1 << 1)))
+        ; // Wait until TX buffer is empty
+    SPI1->DR = data;
+}
+
+uint8_t receive_data()
+{
+    while (!(SPI1->SR & (1 << 0)))
+        ; // Wait until RX buffer is not empty
+    return SPI1->DR;
 }
