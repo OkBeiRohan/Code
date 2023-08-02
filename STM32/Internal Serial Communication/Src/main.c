@@ -27,30 +27,21 @@ uint8_t usart_read(void);
 
 int main(void)
 {
-    uint8_t data = 0;
+    uint8_t data = 0, counter;
 
     lcd_init(BIT_4_MODE);
     config_usart();
-    lcd_print(0, 0, "USART Data");
-    lcd_print(0, 1, "Check Terminal");
-
+    lcd_print(0, 0, "USART: ");
+    lcd_print(0, 1, "Received:");
     while (1)
     {
-        usart_write('H');
-        data = usart_read();
-        lcd_print(0, 1, &data);
-        usart_write('e');
-        usart_write('l');
-        usart_write('l');
-        usart_write('o');
-        usart_write(' ');
-        usart_write('W');
-        usart_write('o');
-        usart_write('r');
-        usart_write('l');
-        usart_write('d');
-        usart_write('!');
-        usart_write('\n');
+        for (counter = 0; counter < 0xFF; counter++)
+        {
+            usart_write(counter);
+            data = usart_read();
+            lcd_print(7, 0, "Received  ");
+            lcd_print_int(10, 1, data, 1);
+        }
     }
 }
 
@@ -78,16 +69,20 @@ void config_usart(void)
 
 void usart_write(uint8_t data)
 {
-    while (!(USART2->SR & (1 << 7)))
+    lcd_print(7, 0, "Awaiting    ");
+    while (!(USART3->SR & (1 << 7)))
     {
     }
-    USART2->DR = data;
+    lcd_print(7, 0, "Sending     ");
+    USART3->DR = (data & 0xFF);
 }
 
 uint8_t usart_read(void)
 {
-    while (!(USART2->SR & (1 << 5)))
+    lcd_print(7, 0, "Awaiting    ");
+    while (!(USART3->SR & (1 << 5)))
     {
     }
-    return USART2->DR;
+    lcd_print(7, 0, "Receiving   ");
+    return USART3->DR;
 }
