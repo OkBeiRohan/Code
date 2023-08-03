@@ -22,16 +22,17 @@
 void spi_master_config(void);
 void spi_gpio_config(void);
 void spi_slave_config(void);
-void communicate(void);
-void send_data(uint8_t data);
+void communicate(uint32_t);
+void send_data(uint32_t);
 void led_config(void);
 void button_config(void);
 void await_button_press(void);
-uint8_t receive_data(void);
-uint8_t data = 0;
+uint32_t receive_data(uint32_t);
 
 int main(void)
 {
+    uint32_t counter = 0;
+
     lcd_init(BIT_4_MODE);
 
     lcd_print(0, 0, "Configuring");
@@ -52,7 +53,12 @@ int main(void)
 
     while (1)
     {
-        communicate();
+        communicate(counter);
+        counter++;
+        if (counter == 0xFF)
+        {
+            counter = 0;
+        }
     }
 }
 
@@ -68,7 +74,7 @@ void spi_master_config()
     SPI1->CR1 |= (1 << 8);            // Internal slave select
     SPI1->CR1 &= ~(1 << 10);          // Full duplex mode
     SPI1->CR1 &= ~(1 << 11);          // 8-bit data format
-    SPI1->CR1 &= ~(3 << 12);          // No CRC
+    SPI1->CR1 &= ~(1 << 13);          // CRC next
     SPI1->CR1 &= ~(1 << 15);          // unidirectional mode
     SPI1->CR1 |= (1 << 6);            // SPI Enable
 }
@@ -110,12 +116,14 @@ void spi_slave_config()
     RCC->APB1ENR |= (1 << 15);        // SPI3 clock enable
     SPI3->CR1 &= ~(1 << 2);           // Slave mode enable
     SPI3->CR1 |= (1 << 0) | (1 << 1); // CPHA=1, 	CPOL=1
+    SPI3->CR1 &= ~(7 << 3);           // clear baudrate
+    SPI3->CR1 |= (3 << 3);            // set baudrate by fclk/16
     SPI3->CR1 &= ~(1 << 7);           // MSB bit first
     SPI3->CR1 |= (1 << 9);            // Software slave enable
     SPI3->CR1 &= ~(1 << 8);           // clear Internal slave select
     SPI3->CR1 &= ~(1 << 10);          // Full duplex mode
     SPI3->CR1 &= ~(1 << 11);          // 8-bit data format
-    SPI3->CR1 &= ~(3 << 12);          // No CRC
+    SPI3->CR1 &= ~(1 << 13);          // CRC next
     SPI3->CR1 &= ~(1 << 15);          // unidirectional mode
     SPI3->CR1 |= (1 << 6);            // SPI Enable
 }
@@ -144,42 +152,57 @@ void await_button_press()
         ; // Wait until button is pressed
 }
 
-void communicate()
+void communicate(uint32_t value)
 {
-    uint8_t rec = 0;
+    uint32_t rec = 0;
     await_button_press();
     lcd_print(4, 0, "Sending     ");
-    lcd_print_int(12, 1, data, 1);
-    send_data(data & 0xFF);
+    lcd_print_int(12, 1, value, 1);
+    send_data(value);
     lcd_print(4, 0, "Receiving   ");
-    rec = receive_data();
+    rec = receive_data(value);
     lcd_print_int(3, 1, rec, 1);
-    data++;
-    if (data == 0xFF)
-    {
-        data = 0;
-    }
 }
 
-void send_data(uint8_t data)
+void send_data(uint32_t data)
 {
     lcd_print(4, 0, "Awaiting    ");
     while (!(SPI1->SR & (1 << 1)))
-        ; // Wait until TX buffer is empty
-    SPI1->DR = data;
+        ;            // Wait until TX buffer is empty
+    SPI1->DR = data; // Send data
     lcd_print(4, 0, "Sending     ");
-    while (SPI1->SR & (1 << 7))
-        ; // Wait until SPI is busy
+    if (SPI1->DR != data)
+    {
+        lcd_print(4, 0, "Data Loss   ");
+        delay(100);
+    }
+    while (!(SPI1->SR & (1 << 1)))
+        ; // Wait until TX buffer is empty
     lcd_print(4, 0, "Sent        ");
+    if (SPI1->SR & (1 << 3))
+    {
+        lcd_print(4, 0, "Overrun     ");
+        delay(100);
+    }
+    if (SPI1->SR & (1 << 4))
+    {
+        lcd_print(4, 0, "Mode Fault  ");
+        delay(100);
+    }
+    if (SPI1->SR & (1 << 6))
+    {
+        lcd_print(4, 0, "CRC Error   ");
+        delay(100);
+    }
 }
 
-uint8_t receive_data()
+uint32_t receive_data(uint32_t check_data)
 {
     lcd_print(4, 0, "Awaiting    ");
     while (!(SPI3->SR & (1 << 0)))
         ; // Wait until RX buffer is not empty
     lcd_print(4, 0, "Received    ");
-    if (SPI3->DR != data)
+    if (SPI3->DR != check_data)
     {
         lcd_print(4, 0, "Data Loss   ");
         delay(100);
@@ -187,6 +210,21 @@ uint8_t receive_data()
     else
     {
         GPIOC->ODR ^= (1 << 6); // Toggle LED
+    }
+    if (SPI3->SR & (1 << 3))
+    {
+        lcd_print(4, 0, "Overrun     ");
+        delay(100);
+    }
+    if (SPI3->SR & (1 << 4))
+    {
+        lcd_print(4, 0, "Mode Fault  ");
+        delay(100);
+    }
+    if (SPI3->SR & (1 << 6))
+    {
+        lcd_print(4, 0, "CRC Error   ");
+        delay(100);
     }
     return SPI3->DR;
 }
