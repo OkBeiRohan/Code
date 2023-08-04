@@ -49,6 +49,9 @@
 #define PORT_D7 GPIOB
 #define PIN_D7 15
 
+#define true 1
+#define false 0
+
 enum lcd_modes
 {
     CLEAR_SCREEN,

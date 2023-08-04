@@ -67,6 +67,7 @@ modules.order
 Module.symvers
 Mkfile.old
 dkms.conf
+Drivers/
 
 # Visual Studio Code
 .vscode/
@@ -82,3 +83,8 @@ Startup/
 .cproject
 *.launch
 *.ld
+
+# FreeRTOS
+*.ioc
+*.mxproject
+RTOS_Workspace/
