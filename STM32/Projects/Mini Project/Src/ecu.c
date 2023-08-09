@@ -241,7 +241,8 @@ void TIM2_IRQHandler()
     }
     else if (headlight_status == PARKING_LIGHT_ON)
     {
-        set_duty_cycle(TIM3, 0);
+        cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+        cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
         cpl_bit(BUZZER_PORT, BUZZER_PIN);
     }
 }
@@ -399,12 +400,15 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         stop_timer();
         set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
         set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        set_bit(BUZZER_PORT, BUZZER_PIN);
         lcd_print(9, 1, "OFF  ");
     }
     else if (status == TURN_INDICATOR_LEFT)
     {
         turn_indicator_status = TURN_INDICATOR_LEFT;
+        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
         set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        set_bit(BUZZER_PORT, BUZZER_PIN);
         start_timer(1000);
         lcd_print(9, 1, "LEFT ");
     }
@@ -412,6 +416,8 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
     {
         turn_indicator_status = TURN_INDICATOR_RIGHT;
         set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        set_bit(BUZZER_PORT, BUZZER_PIN);
         start_timer(1000);
         lcd_print(9, 1, "RIGHT");
     }
@@ -427,6 +433,7 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
             stop_timer();
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            set_bit(BUZZER_PORT, BUZZER_PIN);
         }
         set_bit(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);
         headlight_status = HEAD_LIGHT_OFF;
@@ -450,6 +457,7 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         headlight_status = PARKING_LIGHT_ON;
         set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
         set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        set_bit(BUZZER_PORT, BUZZER_PIN);
         stop_pwm();
         start_timer(500);
         lcd_print(9, 0, "PARK");
