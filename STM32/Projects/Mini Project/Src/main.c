@@ -17,8 +17,9 @@
  */
 
 #include <stdint.h>
-#include <common.h>
+#include <ecu.h>
 
 int main(void)
 {
+  initialize_ecu();
 }

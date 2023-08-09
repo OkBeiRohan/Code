@@ -17,7 +17,19 @@
  */
 
 #include <ecu.h>
+#include <common.h>
 
 void initialize_ecu(void)
 {
+    /**
+     * Initialize the LCD
+     */
+    lcd_init(BIT_4_MODE);
+    lcd_print(0, 0, "Initializing");
+    lcd_print(0, 1, "Please Wait!");
+
+    /**
+     * Enable the clock for GPIOA, GPIOB and GPIOC
+     */
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN;
 }

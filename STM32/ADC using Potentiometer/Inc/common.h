@@ -66,12 +66,60 @@ enum lcd_modes
     BIT_4_MODE,
 };
 
+/**
+ * @brief Set GPIO pin to output mode
+ *
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
 void set_output(GPIO_TypeDef *, uint32_t); // gpio->MODER
+
+/**
+ * @brief Set GPIO pin to input mode
+ *
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
 void set_input(GPIO_TypeDef *, uint32_t);
+
+/**
+ * @brief Set GPIO pin to analog mode
+ *
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
 void set_analog(GPIO_TypeDef *, uint32_t);
+
+/**
+ * @brief Set GPIO pin to pull up mode
+ *
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
 void set_pull_up(GPIO_TypeDef *, uint32_t);
+
+/**
+ * @brief Set GPIO pin to alternate mode
+ *
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
 void set_alternate(GPIO_TypeDef *, uint32_t);
-void set_bit(GPIO_TypeDef *, uint32_t); // gpio->ODR|=(1<<pin)
+
+/**
+ * @brief Sets GPIO pin
+ *
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void set_bit(GPIO_TypeDef *, uint32_t);
+
+/**
+ * @brief Clears GPIO pin
+ *
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
 void clr_bit(GPIO_TypeDef *, uint32_t);
 void cpl_bit(GPIO_TypeDef *, uint32_t);
 void delay(uint32_t);
