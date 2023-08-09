@@ -358,24 +358,20 @@ void EXTI15_10_IRQHandler(void)
         if (headlight_status == HEAD_LIGHT_OFF)
         {
             set_head_light(HEAD_LIGHT_LOW_BEAM);
-            lcd_print(9, 0, "LOW  ");
         }
         else if (headlight_status == HEAD_LIGHT_LOW_BEAM)
         {
             set_head_light(HEAD_LIGHT_HIGH_BEAM);
-            lcd_print(9, 0, "HIGH ");
         }
         else if (headlight_status == HEAD_LIGHT_HIGH_BEAM)
         {
             if (turn_indicator_status == TURN_INDICATOR_OFF)
             {
                 set_head_light(PARKING_LIGHT_ON);
-                lcd_print(9, 0, "PARK ");
             }
             else
             {
                 set_head_light(HEAD_LIGHT_OFF);
-                lcd_print(9, 0, "OFF ");
             }
         }
     }
@@ -401,17 +397,21 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
     {
         turn_indicator_status = TURN_INDICATOR_OFF;
         stop_timer();
+        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
         lcd_print(9, 1, "OFF  ");
     }
     else if (status == TURN_INDICATOR_LEFT)
     {
         turn_indicator_status = TURN_INDICATOR_LEFT;
+        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
         start_timer(1000);
         lcd_print(9, 1, "LEFT ");
     }
     else if (status == TURN_INDICATOR_RIGHT)
     {
         turn_indicator_status = TURN_INDICATOR_RIGHT;
+        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
         start_timer(1000);
         lcd_print(9, 1, "RIGHT");
     }
@@ -421,22 +421,37 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
 {
     if (status == HEAD_LIGHT_OFF)
     {
+        stop_pwm();
+        if (headlight_status == PARKING_LIGHT_ON)
+        {
+            stop_timer();
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        }
+        set_bit(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);
         headlight_status = HEAD_LIGHT_OFF;
         lcd_print(9, 0, "OFF ");
     }
     else if (status == HEAD_LIGHT_LOW_BEAM)
     {
         headlight_status = HEAD_LIGHT_LOW_BEAM;
+        start_pwm(10, 1000); // PWM with 10% duty cycle
         lcd_print(9, 0, "LOW ");
     }
     else if (status == HEAD_LIGHT_HIGH_BEAM)
     {
         headlight_status = HEAD_LIGHT_HIGH_BEAM;
+        stop_pwm();
+        start_pwm(90, 1000); // PWM with 90% duty cycle
         lcd_print(9, 0, "HIGH");
     }
     else if (status == PARKING_LIGHT_ON)
     {
         headlight_status = PARKING_LIGHT_ON;
+        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        stop_pwm();
+        start_timer(500);
         lcd_print(9, 0, "PARK");
     }
 }

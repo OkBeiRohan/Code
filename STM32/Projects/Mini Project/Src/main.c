@@ -25,5 +25,6 @@ int main(void)
 
   while (1)
   {
+    uart_signal_check();
   }
 }
