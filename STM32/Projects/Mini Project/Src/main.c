@@ -22,4 +22,8 @@
 int main(void)
 {
   initialize_ecu();
+
+  while (1)
+  {
+  }
 }

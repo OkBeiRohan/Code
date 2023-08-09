@@ -43,7 +43,7 @@ void init()
   GPIOC->MODER &= ~(1 << 19);
 
   // Initialize EXTI for Button 1 (PB7)
-  RCC->APB2ENR |= (1 << 14); // Enable SYSCFG clock
+  RCC->APB2ENR |= (1 << 14);      // Enable SYSCFG clock
   SYSCFG->EXTICR[1] |= (1 << 12); // Select Port B for EXTI7
   EXTI->IMR |= (1 << 7);          // Unmask EXTI7
   EXTI->RTSR |= (1 << 7);         // Enable Rising Edge Trigger for EXTI7
