@@ -65,9 +65,17 @@
 
 /**
  * The GPIO port and pin for the fuel indicator
+ * POT1 (PC2)
  */
 #define FUEL_INDICATOR_PORT GPIOC
-#define FUEL_INDICATOR_PORT 0
+#define FUEL_INDICATOR_PIN 2
+
+/**
+ * The GPIO port and pin for the indicator's buzzer
+ * BUZZER (PC9)
+ */
+#define BUZZER_PORT GPIOC
+#define BUZZER_PIN 9
 
 /**
  * The value to be transmitted via the UART to verify the status of the ECU
@@ -156,6 +164,6 @@ void set_ignition(enum ENGINE_STATUS);
 /**
  * Transmit and receive data via UART
  */
-void uart_signal_check();
+void uart_signal_check(void);
 
 #endif /* ECU_H_ */
