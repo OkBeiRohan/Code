@@ -21,6 +21,18 @@
 
 #define TIM_FREQ 16000000 // 16 MHz (Frequency of the TIM3 clock)
 
+#define CAR_STATUS_POS 2
+#define CAR_STATUS_LINE 0
+
+#define LIGHT_STATUS_POS 7
+#define LIGHT_STATUS_LINE 0
+
+#define UART_STATUS_POS 14
+#define UART_STATUS_LINE 0
+
+#define FUEL_LEVEL_POS 2
+#define FUEL_LEVEL_LINE 1
+
 enum UART_STATUS uart_status = UART_OK;
 enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
 enum TURN_INDICATOR_STATUS turn_indicator_status = TURN_INDICATOR_OFF;
@@ -138,8 +150,8 @@ void initialize_ecu(void)
     if (mode == LCD_ON)
     {
         set_lcd_mode(CLEAR_SCREEN);
-        lcd_print(0, 0, "CAR:OFF");
-        lcd_print(0, 1, "U:OK F:000%%");
+        lcd_print(0, 0, "C:OFF L:OFF U:OK");
+        lcd_print(0, 1, "F:000% S:ENG OFF");
     }
 }
 
@@ -277,24 +289,25 @@ void TIM2_IRQHandler()
 {
     if (TIM2->SR & TIM_SR_UIF)
     {
-        TIM2->SR &= ~TIM_SR_UIF;
-    }
 
-    if (turn_indicator_status == TURN_INDICATOR_LEFT)
-    {
-        cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-        cpl_bit(BUZZER_PORT, BUZZER_PIN);
-    }
-    else if (turn_indicator_status == TURN_INDICATOR_RIGHT)
-    {
-        cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-        cpl_bit(BUZZER_PORT, BUZZER_PIN);
-    }
-    else if (headlight_status == PARKING_LIGHT_ON)
-    {
-        cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-        cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-        cpl_bit(BUZZER_PORT, BUZZER_PIN);
+        if (turn_indicator_status == TURN_INDICATOR_LEFT)
+        {
+            cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            cpl_bit(BUZZER_PORT, BUZZER_PIN);
+        }
+        else if (turn_indicator_status == TURN_INDICATOR_RIGHT)
+        {
+            cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            cpl_bit(BUZZER_PORT, BUZZER_PIN);
+        }
+        else if (headlight_status == PARKING_LIGHT_ON)
+        {
+            cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            cpl_bit(BUZZER_PORT, BUZZER_PIN);
+        }
+
+        TIM2->SR &= ~TIM_SR_UIF;
     }
 }
 
