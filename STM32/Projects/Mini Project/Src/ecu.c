@@ -525,7 +525,7 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         {
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            set_bit(BUZZER_PORT, BUZZER_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
             start_timer(1000);
         }
         else
@@ -540,7 +540,7 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         {
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            set_bit(BUZZER_PORT, BUZZER_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
             start_timer(1000);
         }
         else
