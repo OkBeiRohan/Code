@@ -331,7 +331,7 @@ void lcd_print_int(uint8_t position, uint8_t line, uint32_t dval, uint8_t print_
 
     if (print_leading_zero)
     {
-        sprintf(str, "%04d", dval);
+        sprintf(str, "%03d", dval);
     }
     else
     {

@@ -27,6 +27,7 @@ enum TURN_INDICATOR_STATUS turn_indicator_status = TURN_INDICATOR_OFF;
 enum ENGINE_STATUS engine_status = ENGINE_OFF;
 enum ECU_MODE mode = LCD_ON;
 uint8_t uart_data = 0x0;
+uint8_t fuel_level = 0;
 
 /**
  * @brief Initialize the UART
@@ -83,6 +84,11 @@ void initialize_timer(void);
  */
 void initialize_exti_buttons(void);
 
+/**
+ * Initialize the ADC for the fuel indicator
+ */
+void initialize_adc(void);
+
 void set_mode(enum ECU_MODE new_mode)
 {
     mode = new_mode;
@@ -127,12 +133,13 @@ void initialize_ecu(void)
     }
     initialize_uart();
     initialize_exti_buttons();
+    initialize_adc();
 
     if (mode == LCD_ON)
     {
         set_lcd_mode(CLEAR_SCREEN);
         lcd_print(0, 0, "CAR:OFF");
-        lcd_print(0, 1, "U:OK");
+        lcd_print(0, 1, "U:OK F:000%%");
     }
 }
 
@@ -175,7 +182,7 @@ void uart_signal_check(void)
         uart_status = UART_OK;
         if (mode == LCD_ON)
         {
-            lcd_print(2, 1, "OK   ");
+            lcd_print(2, 1, "OK");
         }
     }
     else
@@ -185,7 +192,7 @@ void uart_signal_check(void)
             uart_status = UART_NOT_OK;
             if (mode == LCD_ON)
             {
-                lcd_print(2, 1, "ERROR");
+                lcd_print(2, 1, "ER");
             }
         }
     }
@@ -241,6 +248,29 @@ void stop_timer(void)
 {
     TIM2->CR1 &= ~TIM_CR1_CEN; // Disable the counter
     TIM2->CNT = 0;
+}
+
+void initialize_adc(void)
+{
+    RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable the clock for ADC1
+    ADC1->CR2 = 0;                      // Disable the ADC
+    ADC1->SQR3 |= (0xC << 0);           // Set the 13th channel as the first conversion in the regular sequence
+    ADC1->SQR1 = 0;                     // Set the length of the regular sequence to 1 conversion
+    ADC1->CR2 = 1;                      // Enable the ADC
+}
+
+void check_fuel_status()
+{
+    if (mode == LCD_OFF)
+    {
+        return;
+    }
+
+    ADC1->CR2 |= ADC_CR2_SWSTART; // Start the conversion
+    while (!(ADC1->SR & ADC_SR_EOC))
+        ;                                 // Wait for the conversion to finish
+    fuel_level = (ADC1->DR) * 100 / 4095; // Read the converted value
+    lcd_print_int(6, 1, fuel_level, 1);
 }
 
 void TIM2_IRQHandler()

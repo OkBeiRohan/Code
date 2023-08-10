@@ -26,7 +26,8 @@ int main(void)
 
   while (1)
   {
-//    uart_signal_check();
+    //    uart_signal_check();
+    check_fuel_status();
   }
 }
 

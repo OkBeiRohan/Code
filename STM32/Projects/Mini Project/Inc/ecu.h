@@ -199,6 +199,15 @@ void left_turn_handler(void);
 void right_turn_handler(void);
 void head_light_handler(void);
 
+/**
+ * Sets the mode of working
+ * @param mode The mode of working
+ */
 void set_mode(enum ECU_MODE);
+
+/**
+ * Checks the status of the fuel indicator
+ */
+void check_fuel_status(void);
 
 #endif /* ECU_H_ */
