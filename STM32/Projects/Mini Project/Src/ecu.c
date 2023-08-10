@@ -143,6 +143,11 @@ void initialize_ecu(void)
         set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);        // Head Light
         set_output(BUZZER_PORT, BUZZER_PIN);                   // Buzzer
 
+        set_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Turn OFF the Ignition LED
+        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);   // Turn OFF the Left Turn Lamp
+        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Turn OFF the Right Turn Lamp
+        clr_bit(BUZZER_PORT, BUZZER_PIN);                   // Turn OFF the Buzzer
+
         initialize_pwm();
         initialize_timer();
     }
@@ -218,29 +223,29 @@ void uart_signal_check(void)
 
 void initialize_pwm(void)
 {
-    GPIOC->AFR[0] |= (0x2 << 24); // Set AF2 for PC6 (TIM3_CH1)
+    GPIOC->AFR[0] |= (0x1 << 25); // Set AF2 for PC6 (TIM3_CH1)
 
-    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN; // Enable the clock for TIM3
-    TIM3->PSC = 0x0;                    // Set the prescaler to 0
-    TIM3->CNT = 0x0;                    // Set the counter to 0
-    // TIM3->ARR = 0x3E8;                                  // Set the auto-reload register to 1000
+    RCC->APB1ENR |= RCC_APB1ENR_TIM3EN;                 // Enable the clock for TIM3
+    TIM3->PSC = 0x0;                                    // Set the prescaler to 0
+    TIM3->CNT = 0x0;                                    // Set the counter to 0
+    TIM3->ARR = 0x3E8;                                  // Set the auto-reload register to 1000
+    TIM3->CCR1 = 0x0;                                   // Set the duty cycle to 0
     TIM3->CCMR1 |= TIM_CCMR1_OC1M_1 | TIM_CCMR1_OC1M_2; // Set the PWM mode to PWM mode 1
     TIM3->CCMR1 |= TIM_CCMR1_OC1PE;                     // Enable the preload register (Output Compare 1)
-    TIM3->CCER |= TIM_CCER_CC1E;                        // Enable the Capture/Compare 1 output for channel 1
-    // TIM3->CR1 |= TIM_CR1_ARPE;                          // Enable the auto-reload preload register
-    TIM3->CR1 |= TIM_CR1_CEN; // Enable the counter and enable the auto-reload preload register
+    TIM3->CCER |= (3 << 0);                             // Enable the output for channel 1
+    TIM3->CR1 |= TIM_CR1_CEN;                           // Enable the counterr
 }
 
 void start_pwm(uint16_t duty_cycle, uint16_t frequency)
 {
-    TIM3->CCR1 = duty_cycle;                // Set the duty cycle
-    TIM3->ARR = (TIM_FREQ / frequency) - 1; // Set the auto-reload register
-    TIM3->CR1 |= TIM_CR1_CEN;               // Enable the counter and enable the auto-reload preload register
+    TIM3->CCR1 = (duty_cycle * ((TIM3->ARR) + 1)) / 100; // Set the duty cycle
+    TIM3->ARR = (TIM_FREQ / frequency) - 1;              // Set the auto-reload register
 }
 
 void stop_pwm()
 {
-    TIM3->CR1 &= ~TIM_CR1_CEN; // Disable the counter
+    TIM3->ARR = 0x3E8; // Set the auto-reload register to 1000
+    TIM3->CCR1 = 0x0;  // Set the duty cycle to 0
     TIM3->CNT = 0;
 }
 
@@ -576,7 +581,7 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         }
         else
         {
-            start_pwm(10, 1000); // PWM with 10% duty cycle
+            start_pwm(10, 10000); // PWM with 10% duty cycle
         }
     }
     else if (status == HEAD_LIGHT_HIGH_BEAM)
@@ -589,7 +594,7 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         else
         {
             stop_pwm();
-            start_pwm(90, 1000); // PWM with 90% duty cycle
+            start_pwm(90, 10000); // PWM with 90% duty cycle
         }
     }
     else if (status == PARKING_LIGHT_ON)
