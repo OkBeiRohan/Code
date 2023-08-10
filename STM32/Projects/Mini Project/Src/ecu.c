@@ -329,16 +329,17 @@ void left_turn_handler(void)
     {
         if (engine_status == ENGINE_OFF || headlight_status == PARKING_LIGHT_ON)
         {
+            EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
             return;
         }
 
-        if (turn_indicator_status == TURN_INDICATOR_OFF)
-        {
-            set_turn_indicator(TURN_INDICATOR_LEFT);
-        }
-        else if (turn_indicator_status == TURN_INDICATOR_LEFT)
+        if (turn_indicator_status == TURN_INDICATOR_LEFT)
         {
             set_turn_indicator(TURN_INDICATOR_OFF);
+        }
+        else
+        {
+            set_turn_indicator(TURN_INDICATOR_LEFT);
         }
 
         EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
@@ -351,16 +352,17 @@ void right_turn_handler(void)
 
         if (engine_status == ENGINE_OFF || headlight_status == PARKING_LIGHT_ON)
         {
+            EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
             return;
         }
 
-        if (turn_indicator_status == TURN_INDICATOR_OFF)
-        {
-            set_turn_indicator(TURN_INDICATOR_RIGHT);
-        }
-        else if (turn_indicator_status == TURN_INDICATOR_RIGHT)
+        if (turn_indicator_status == TURN_INDICATOR_RIGHT)
         {
             set_turn_indicator(TURN_INDICATOR_OFF);
+        }
+        else
+        {
+            set_turn_indicator(TURN_INDICATOR_RIGHT);
         }
 
         EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
@@ -373,6 +375,7 @@ void head_light_handler(void)
     {
         if (engine_status == ENGINE_OFF)
         {
+            EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
             return;
         }
         if (headlight_status == HEAD_LIGHT_OFF)
