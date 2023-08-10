@@ -354,10 +354,15 @@ void initialize_exti_buttons(void)
     EXTI->IMR |= EXTI_IMR_IM7;  // Unmask EXTI7
     EXTI->IMR |= EXTI_IMR_IM15; // Unmask EXTI15
 
-    EXTI->RTSR |= EXTI_RTSR_TR3;  // Set EXTI3 to rising edge
-    EXTI->RTSR |= EXTI_RTSR_TR4;  // Set EXTI4 to rising edge
-    EXTI->RTSR |= EXTI_RTSR_TR7;  // Set EXTI7 to rising edge
-    EXTI->RTSR |= EXTI_RTSR_TR15; // Set EXTI15 to rising edge
+    // EXTI->RTSR |= EXTI_RTSR_TR3;  // Set EXTI3 to rising edge
+    // EXTI->RTSR |= EXTI_RTSR_TR4;  // Set EXTI4 to rising edge
+    // EXTI->RTSR |= EXTI_RTSR_TR7;  // Set EXTI7 to rising edge
+    // EXTI->RTSR |= EXTI_RTSR_TR15; // Set EXTI15 to rising edge
+
+    EXTI->FTSR |= EXTI_FTSR_TR3;  // Set falling edge for EXTI3
+    EXTI->FTSR |= EXTI_FTSR_TR4;  // Set falling edge for EXTI4
+    EXTI->FTSR |= EXTI_FTSR_TR7;  // Set falling edge for EXTI7
+    EXTI->FTSR |= EXTI_FTSR_TR15; // Set falling edge for EXTI15
 
     // uint32_t volatile *NVIC_ISER0 = (uint32_t *)0xE000E100; // Address of the NVIC ISER0 register
     // *NVIC_ISER0 |= (1 << 9);                                // Enable the EXTI3 global interrupt
