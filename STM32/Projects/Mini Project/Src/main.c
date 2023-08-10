@@ -28,3 +28,23 @@ int main(void)
     uart_signal_check();
   }
 }
+
+void EXTI3_IRQHandler(void)
+{
+  ignition_handler();
+}
+
+void EXTI4_IRQHandler(void)
+{
+  left_turn_handler();
+}
+
+void EXTI9_5_IRQHandler(void)
+{
+  right_turn_handler();
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+  head_light_handler();
+}

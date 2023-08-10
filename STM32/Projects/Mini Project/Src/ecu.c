@@ -25,6 +25,8 @@ enum UART_STATUS uart_status = UART_OK;
 enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
 enum TURN_INDICATOR_STATUS turn_indicator_status = TURN_INDICATOR_OFF;
 enum ENGINE_STATUS engine_status = ENGINE_OFF;
+enum MODE mode = LCD_ON;
+uint8_t uart_data = 0x0;
 
 /**
  * @brief Initialize the UART
@@ -83,12 +85,15 @@ void initialize_exti_buttons(void);
 
 void initialize_ecu(void)
 {
-    /**
-     * Initialize the LCD
-     */
-    lcd_init(BIT_4_MODE);
-    lcd_print(0, 0, "Initializing");
-    lcd_print(0, 1, "Please Wait!");
+    if (mode == LCD_ON)
+    {
+        /**
+         * Initialize the LCD
+         */
+        lcd_init(BIT_4_MODE);
+        lcd_print(0, 0, "Initializing");
+        lcd_print(0, 1, "Please Wait!");
+    }
 
     /**
      * Enable the clock for GPIOA, GPIOB and GPIOC
@@ -98,15 +103,28 @@ void initialize_ecu(void)
     /**
      * Configure the modes for the GPIO ports (Switches, LEDs, Buzzer and Potentiometer)
      */
+    if (mode == LCD_OFF)
+    {
+        set_output(IGNITION_LED_PORT, IGNITION_LED_PIN); // Ignition LED
+    }
     set_input(IGNITION_KEY_PORT, IGNITION_KEY_PIN); // Ignition Key
 
-    set_output(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);    // Left Turn Lamp
+    if (mode == LCD_OFF)
+    {
+        set_output(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN); // Left Turn Lamp
+    }
     set_input(LEFT_TURN_SWITCH_PORT, LEFT_TURN_SWITCH_PIN); // Left Turn Switch
 
-    set_output(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);    // Right Turn Lamp
+    if (mode == LCD_OFF)
+    {
+        set_output(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Right Turn Lamp
+    }
     set_input(RIGHT_TURN_SWITCH_PORT, RIGHT_TURN_SWITCH_PIN); // Right Turn Switch
 
-    set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);           // Head Light
+    if (mode == LCD_OFF)
+    {
+        set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN); // Head Light
+    }
     set_input(HEAD_LIGHT_SWITCH_PORT, HEAD_LIGHT_SWITCH_PIN); // Head Light Switch
 
     set_output(BUZZER_PORT, BUZZER_PIN); // Buzzer
@@ -118,19 +136,22 @@ void initialize_ecu(void)
     initialize_timer();
     initialize_exti_buttons();
 
-    set_lcd_mode(CLEAR_SCREEN);
-    lcd_print(0, 0, "CAR:OFF");
-    lcd_print(0, 1, "U:OK");
+    if (mode == LCD_ON)
+    {
+        set_lcd_mode(CLEAR_SCREEN);
+        lcd_print(0, 0, "CAR:OFF");
+        lcd_print(0, 1, "U:OK");
+    }
 }
 
 void initialize_uart(void)
 {
     /**
-     * Configure UART4_TX (PA0 - AF8), UART4_RX (PA1 - AF8)
+     * Configure UART4_TX (PC10 - AF8), UART4_RX (PC11 - AF8)
      */
-    GPIOA->AFR[0] |= (0x8 << 0) | (0x8 << 4); // Set AF8 for PA0 and PA1
-    set_alternate(GPIOA, 0);                  // Set PA0 to alternate function mode
-    set_alternate(GPIOA, 1);                  // Set PA1 to alternate function mode
+    GPIOC->AFR[1] |= (0x8 << 8) | (0x8 << 12); // Set AF8 for PC10 and PC11
+    set_alternate(UART_TX_PORT, UART_TX_PIN);  // Set PA0 to alternate function mode
+    set_alternate(UART_RX_PORT, UART_RX_PIN);  // Set PA1 to alternate function mode
 
     RCC->APB1ENR |= RCC_APB1ENR_UART4EN;                      // Enable the clock for UART4
     UART4->BRR = 0x683;                                       // Set the baud rate to 9600
@@ -155,17 +176,25 @@ uint8_t uart_read(void)
 void uart_signal_check(void)
 {
     uart_write((uint8_t)UART_TRANSMIT_DATA);
-    uint8_t data = uart_read();
+    uart_data = uart_read();
 
-    if ((data == (uint8_t)UART_TRANSMIT_DATA) && (uart_status != UART_OK))
+    if ((uart_data == (uint8_t)UART_TRANSMIT_DATA) && (uart_status != UART_OK))
     {
-        lcd_print(2, 1, "OK   ");
+        uart_status = UART_OK;
+        if (mode == LCD_ON)
+        {
+            lcd_print(2, 1, "OK   ");
+        }
     }
     else
     {
         if (uart_status != UART_NOT_OK)
         {
-            lcd_print(2, 1, "ERROR");
+            uart_status = UART_NOT_OK;
+            if (mode == LCD_ON)
+            {
+                lcd_print(2, 1, "ERROR");
+            }
         }
     }
 }
@@ -231,18 +260,27 @@ void TIM2_IRQHandler()
 
     if (turn_indicator_status == TURN_INDICATOR_LEFT)
     {
-        cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+        if (mode == LCD_OFF)
+        {
+            cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+        }
         cpl_bit(BUZZER_PORT, BUZZER_PIN);
     }
     else if (turn_indicator_status == TURN_INDICATOR_RIGHT)
     {
-        cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        if (mode == LCD_OFF)
+        {
+            cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        }
         cpl_bit(BUZZER_PORT, BUZZER_PIN);
     }
     else if (headlight_status == PARKING_LIGHT_ON)
     {
-        cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-        cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        if (mode == LCD_OFF)
+        {
+            cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        }
         cpl_bit(BUZZER_PORT, BUZZER_PIN);
     }
 }
@@ -275,14 +313,14 @@ void initialize_exti_buttons(void)
     // EXTI->FTSR |= EXTI_FTSR_TR3;  // Set EXTI3 to falling edge
 
     uint32_t volatile *NVIC_ISER0 = (uint32_t *)0xE000E100; // Address of the NVIC ISER0 register
-    *NVIC_ISER0 |= (1 << 3);                                // Enable the EXTI3 global interrupt
-    *NVIC_ISER0 |= (1 << 4);                                // Enable the EXTI4 global interrupt
-    *NVIC_ISER0 |= (1 << 7);                                // Enable the EXTI7 global interrupt
-    *NVIC_ISER0 |= (1 << 15);                               // Enable the EXTI15_10 global interrupt
-    *NVIC_ISER0 |= (1 << 23);                               // Enable the EXTI3 global interrupt
+    *NVIC_ISER0 |= (1 << 9);                                // Enable the EXTI3 global interrupt
+    *NVIC_ISER0 |= (1 << 10);                               // Enable the EXTI4 global interrupt
+    // *NVIC_ISER0 |= (1 << 7);                                // Enable the EXTI7 global interrupt
+    *NVIC_ISER0 |= (1 << 15); // Enable the EXTI15_10 global interrupt
+    *NVIC_ISER0 |= (1 << 23); // Enable the EXTI9_5 global interrupt
 }
 
-void EXTI3_IRQHandler(void)
+void ignition_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR3)
     {
@@ -301,7 +339,7 @@ void EXTI3_IRQHandler(void)
     }
 }
 
-void EXTI4_IRQHandler(void)
+void left_turn_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR4)
     {
@@ -322,8 +360,7 @@ void EXTI4_IRQHandler(void)
         }
     }
 }
-
-void EXTI9_5_IRQHandler(void)
+void right_turn_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR7)
     {
@@ -345,7 +382,7 @@ void EXTI9_5_IRQHandler(void)
     }
 }
 
-void EXTI15_10_IRQHandler(void)
+void head_light_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR15)
     {
@@ -383,12 +420,26 @@ void set_ignition(enum ENGINE_STATUS status)
     if (status == ENGINE_ON)
     {
         engine_status = ENGINE_ON;
-        lcd_print(4, 0, "ON ");
+        if (mode == LCD_ON)
+        {
+            lcd_print(4, 0, "ON ");
+        }
+        else
+        {
+            clr_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);
+        }
     }
     else if (status == ENGINE_OFF)
     {
         engine_status = ENGINE_OFF;
-        lcd_print(4, 0, "OFF");
+        if (mode == LCD_ON)
+        {
+            lcd_print(4, 0, "OFF");
+        }
+        else
+        {
+            set_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);
+        }
     }
 }
 
@@ -398,19 +449,31 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
     {
         turn_indicator_status = TURN_INDICATOR_OFF;
         stop_timer();
-        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        if (mode == LCD_OFF)
+        {
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        }
+        else
+        {
+            lcd_print(9, 1, "OFF  ");
+        }
         set_bit(BUZZER_PORT, BUZZER_PIN);
-        lcd_print(9, 1, "OFF  ");
     }
     else if (status == TURN_INDICATOR_LEFT)
     {
         turn_indicator_status = TURN_INDICATOR_LEFT;
-        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        if (mode == LCD_OFF)
+        {
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+        }
+        else
+        {
+            lcd_print(9, 1, "LEFT ");
+        }
         set_bit(BUZZER_PORT, BUZZER_PIN);
         start_timer(1000);
-        lcd_print(9, 1, "LEFT ");
     }
     else if (status == TURN_INDICATOR_RIGHT)
     {

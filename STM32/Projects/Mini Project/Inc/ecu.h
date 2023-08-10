@@ -22,6 +22,13 @@
 #define IGNITION_KEY_PIN 3
 
 /**
+ * The GPIO port and pin for the ignition LED
+ * LED2 (PB13)
+ */
+#define IGNITION_LED_PORT GPIOB
+#define IGNITION_LED_PIN 13
+
+/**
  * The GPIO port and pin for the left turn indicator
  * LED4 (PB15)
  */
@@ -81,6 +88,27 @@
  * The value to be transmitted via the UART to verify the status of the ECU
  */
 #define UART_TRANSMIT_DATA 'j'
+
+/**
+ * The GPIO port and pin for the UART
+ * TX (PA0)
+ * RX (PA1)
+ */
+#define UART_TX_PORT GPIOC
+#define UART_TX_PIN 10
+#define UART_RX_PORT GPIOC
+#define UART_RX_PIN 11
+
+/**
+ * The mode of working
+ * ON: The LCD is turned ON, LEDs are OFF
+ * OFF: The LCD is turned OFF, LEDs are ON
+ */
+enum MODE
+{
+    LCD_ON,
+    LCD_OFF
+};
 
 /**
  * The statuses available for the engine (ignition)
@@ -165,5 +193,10 @@ void set_ignition(enum ENGINE_STATUS);
  * Transmit and receive data via UART
  */
 void uart_signal_check(void);
+
+void ignition_handler(void);
+void left_turn_handler(void);
+void right_turn_handler(void);
+void head_light_handler(void);
 
 #endif /* ECU_H_ */
