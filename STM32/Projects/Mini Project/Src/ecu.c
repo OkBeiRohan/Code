@@ -108,40 +108,24 @@ void initialize_ecu(void)
     /**
      * Configure the modes for the GPIO ports (Switches, LEDs, Buzzer and Potentiometer)
      */
-    if (mode == LCD_OFF)
-    {
-        set_output(IGNITION_LED_PORT, IGNITION_LED_PIN); // Ignition LED
-    }
-    set_input(IGNITION_KEY_PORT, IGNITION_KEY_PIN); // Ignition Key
-
-    if (mode == LCD_OFF)
-    {
-        set_output(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN); // Left Turn Lamp
-    }
-    set_input(LEFT_TURN_SWITCH_PORT, LEFT_TURN_SWITCH_PIN); // Left Turn Switch
-
-    if (mode == LCD_OFF)
-    {
-        set_output(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Right Turn Lamp
-    }
+    set_input(IGNITION_KEY_PORT, IGNITION_KEY_PIN);           // Ignition Key
+    set_input(LEFT_TURN_SWITCH_PORT, LEFT_TURN_SWITCH_PIN);   // Left Turn Switch
     set_input(RIGHT_TURN_SWITCH_PORT, RIGHT_TURN_SWITCH_PIN); // Right Turn Switch
-
-    if (mode == LCD_OFF)
-    {
-        set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN); // Head Light
-    }
     set_input(HEAD_LIGHT_SWITCH_PORT, HEAD_LIGHT_SWITCH_PIN); // Head Light Switch
-
-    set_output(BUZZER_PORT, BUZZER_PIN); // Buzzer
-
-    set_analog(FUEL_INDICATOR_PORT, FUEL_INDICATOR_PIN); // Fuel Indicator
+    set_analog(FUEL_INDICATOR_PORT, FUEL_INDICATOR_PIN);      // Fuel Indicator
 
     if (mode == LCD_OFF)
     {
+        set_output(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Ignition LED
+        set_output(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);   // Left Turn Lamp
+        set_output(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Right Turn Lamp
+        set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);        // Head Light
+        set_output(BUZZER_PORT, BUZZER_PIN);                   // Buzzer
+
         initialize_pwm();
+        initialize_timer();
     }
     initialize_uart();
-    initialize_timer();
     initialize_exti_buttons();
 
     if (mode == LCD_ON)
@@ -268,27 +252,18 @@ void TIM2_IRQHandler()
 
     if (turn_indicator_status == TURN_INDICATOR_LEFT)
     {
-        if (mode == LCD_OFF)
-        {
-            cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-        }
+        cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
         cpl_bit(BUZZER_PORT, BUZZER_PIN);
     }
     else if (turn_indicator_status == TURN_INDICATOR_RIGHT)
     {
-        if (mode == LCD_OFF)
-        {
-            cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-        }
+        cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
         cpl_bit(BUZZER_PORT, BUZZER_PIN);
     }
     else if (headlight_status == PARKING_LIGHT_ON)
     {
-        if (mode == LCD_OFF)
-        {
-            cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-            cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-        }
+        cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+        cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
         cpl_bit(BUZZER_PORT, BUZZER_PIN);
     }
 }
@@ -461,12 +436,12 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         {
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
         }
         else
         {
             lcd_print(9, 1, "OFF  ");
         }
-        set_bit(BUZZER_PORT, BUZZER_PIN);
     }
     else if (status == TURN_INDICATOR_LEFT)
     {
