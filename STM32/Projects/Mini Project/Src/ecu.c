@@ -313,7 +313,6 @@ void TIM2_IRQHandler()
 {
     if (TIM2->SR & TIM_SR_UIF)
     {
-
         if (turn_indicator_status == TURN_INDICATOR_LEFT)
         {
             cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
@@ -365,10 +364,17 @@ void initialize_exti_buttons(void)
     // *NVIC_ISER0 |= (1 << 10);                               // Enable the EXTI4 global interrupt
     // *NVIC_ISER0 |= (1 << 23);                               // Enable the EXTI9_5 global interrupt
 
-    NVIC_EnableIRQ(EXTI3_IRQn);     // Enable the EXTI3 global interrupt
-    NVIC_EnableIRQ(EXTI4_IRQn);     // Enable the EXTI4 global interrupt
-    NVIC_EnableIRQ(EXTI9_5_IRQn);   // Enable the EXTI9_5 global interrupt
-    NVIC_EnableIRQ(EXTI15_10_IRQn); // Enable the EXTI15_10 global interrupt
+    NVIC_EnableIRQ(EXTI3_IRQn);      // Enable the EXTI3 global interrupt
+    NVIC_SetPriority(EXTI3_IRQn, 0); // Set the priority of the EXTI3 interrupt to 0 (highest priority)
+
+    NVIC_EnableIRQ(EXTI4_IRQn);      // Enable the EXTI4 global interrupt
+    NVIC_SetPriority(EXTI4_IRQn, 2); // Set the priority of the EXTI4 interrupt to 2 (third highest priority)
+
+    NVIC_EnableIRQ(EXTI9_5_IRQn);      // Enable the EXTI9_5 global interrupt
+    NVIC_SetPriority(EXTI9_5_IRQn, 3); // Set the priority of the EXTI9_5 interrupt to 3 (fourth highest priority)
+
+    NVIC_EnableIRQ(EXTI15_10_IRQn);      // Enable the EXTI15_10 global interrupt
+    NVIC_SetPriority(EXTI15_10_IRQn, 1); // Set the priority of the EXTI15_10 interrupt to 1 (second highest priority)
 }
 
 void ignition_handler(void)
@@ -557,7 +563,6 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         if (mode == LCD_OFF)
         {
             stop_pwm();
-            set_bit(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);
             if (headlight_status == PARKING_LIGHT_ON)
             {
                 stop_timer();
