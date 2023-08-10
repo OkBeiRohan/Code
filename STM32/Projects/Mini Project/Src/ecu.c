@@ -24,7 +24,7 @@
 #define ENGINE_STATUS_POS 2
 #define ENGINE_STATUS_LINE 0
 
-#define LIGHT_STATUS_POS 7
+#define LIGHT_STATUS_POS 8
 #define LIGHT_STATUS_LINE 0
 
 #define UART_STATUS_POS 14
@@ -192,12 +192,15 @@ void uart_signal_check(void)
     uart_write((uint8_t)UART_TRANSMIT_DATA);
     uart_data = uart_read();
 
-    if ((uart_data == (uint8_t)UART_TRANSMIT_DATA) && (uart_status != UART_OK))
+    if ((uart_data == (uint8_t)UART_TRANSMIT_DATA))
     {
-        uart_status = UART_OK;
-        if (mode == LCD_ON)
+        if (uart_status != UART_OK)
         {
-            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OK");
+            uart_status = UART_OK;
+            if (mode == LCD_ON)
+            {
+                lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OK");
+            }
         }
     }
     else
@@ -276,16 +279,29 @@ void initialize_adc(void)
 
 void check_fuel_status()
 {
-    if (mode == LCD_OFF)
+    if (engine_status == ENGINE_OFF)
     {
+        if (fuel_level != 0)
+        {
+            fuel_level = 0;
+            if (mode == LCD_ON)
+            {
+                lcd_print_int(FUEL_LEVEL_POS, FUEL_LEVEL_LINE, fuel_level, 1);
+            }
+        }
         return;
     }
-
     ADC1->CR2 |= ADC_CR2_SWSTART; // Start the conversion
     while (!(ADC1->SR & ADC_SR_EOC))
-        ;                                 // Wait for the conversion to finish
-    fuel_level = (ADC1->DR) * 100 / 4095; // Read the converted value
-    lcd_print_int(FUEL_LEVEL_POS, FUEL_LEVEL_LINE, fuel_level, 1);
+        ;                                         // Wait for the conversion to finish
+    uint8_t fuel_range_changed = 0;               // Flag to check if the fuel range has changed
+    uint8_t curr_level = (ADC1->DR) * 100 / 4095; // Read the converted value
+    fuel_range_changed = (curr_level != fuel_level) ? (fuel_level + 10) < curr_level || (fuel_level - 10) > curr_level ? 1 : 0 : 0;
+    fuel_level = curr_level; // Read the converted value
+    if (mode == LCD_ON && fuel_range_changed == 1)
+    {
+        lcd_print_int(FUEL_LEVEL_POS, FUEL_LEVEL_LINE, fuel_level, 1);
+    }
 }
 
 void TIM2_IRQHandler()
@@ -360,9 +376,9 @@ void ignition_handler(void)
         }
         else if (engine_status == ENGINE_ON)
         {
-            set_ignition(ENGINE_OFF);
             set_turn_indicator(TURN_INDICATOR_OFF);
             set_head_light(HEAD_LIGHT_OFF);
+            set_ignition(ENGINE_OFF);
         }
 
         EXTI->PR |= EXTI_PR_PR3; // Clear the pending bit
