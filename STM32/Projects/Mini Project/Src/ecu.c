@@ -431,9 +431,9 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
     if (status == TURN_INDICATOR_OFF)
     {
         turn_indicator_status = TURN_INDICATOR_OFF;
-        stop_timer();
         if (mode == LCD_OFF)
         {
+            stop_timer();
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
             clr_bit(BUZZER_PORT, BUZZER_PIN);
@@ -450,13 +450,13 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         {
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            set_bit(BUZZER_PORT, BUZZER_PIN);
+            start_timer(1000);
         }
         else
         {
             lcd_print(9, 1, "LEFT ");
         }
-        set_bit(BUZZER_PORT, BUZZER_PIN);
-        start_timer(1000);
     }
     else if (status == TURN_INDICATOR_RIGHT)
     {
@@ -465,13 +465,13 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         {
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            set_bit(BUZZER_PORT, BUZZER_PIN);
+            start_timer(1000);
         }
         else
         {
             lcd_print(9, 1, "RIGHT");
         }
-        set_bit(BUZZER_PORT, BUZZER_PIN);
-        start_timer(1000);
     }
 }
 
@@ -479,16 +479,19 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
 {
     if (status == HEAD_LIGHT_OFF)
     {
-        stop_pwm();
+        if (mode == LCD_OFF)
+        {
+            stop_pwm();
+        }
         if (headlight_status == PARKING_LIGHT_ON)
         {
-            stop_timer();
             if (mode == LCD_OFF)
             {
+                stop_timer();
                 set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
                 set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+                clr_bit(BUZZER_PORT, BUZZER_PIN);
             }
-            set_bit(BUZZER_PORT, BUZZER_PIN);
         }
         if (mode == LCD_OFF)
         {
@@ -515,13 +518,13 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
     else if (status == HEAD_LIGHT_HIGH_BEAM)
     {
         headlight_status = HEAD_LIGHT_HIGH_BEAM;
-        stop_pwm();
         if (mode == LCD_ON)
         {
             lcd_print(9, 0, "HIGH");
         }
         else
         {
+            stop_pwm();
             start_pwm(90, 1000); // PWM with 90% duty cycle
         }
     }
@@ -532,10 +535,13 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         {
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            set_bit(BUZZER_PORT, BUZZER_PIN);
+            stop_pwm();
+            start_timer(500);
         }
-        set_bit(BUZZER_PORT, BUZZER_PIN);
-        stop_pwm();
-        start_timer(500);
-        lcd_print(9, 0, "PARK");
+        else
+        {
+            lcd_print(9, 0, "PARK");
+        }
     }
 }
