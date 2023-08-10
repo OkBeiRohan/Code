@@ -293,10 +293,10 @@ void check_fuel_status()
     }
     ADC1->CR2 |= ADC_CR2_SWSTART; // Start the conversion
     while (!(ADC1->SR & ADC_SR_EOC))
-        ;                                         // Wait for the conversion to finish
-    uint8_t fuel_range_changed = 0;               // Flag to check if the fuel range has changed
-    uint8_t curr_level = (ADC1->DR) * 100 / 4095; // Read the converted value
-    fuel_range_changed = (curr_level != fuel_level) ? (fuel_level + 10) < curr_level || (fuel_level - 10) > curr_level ? 1 : 0 : 0;
+        ;                                                 // Wait for the conversion to finish
+    uint8_t fuel_range_changed = 0;                       // Flag to check if the fuel range has changed
+    uint8_t curr_level = ((ADC1->DR) / 10) * 100 / 409.5; // Read the converted value
+    fuel_range_changed = (curr_level != fuel_level) ? 1 : 0;
     fuel_level = curr_level; // Read the converted value
     if (mode == LCD_ON && fuel_range_changed == 1)
     {
