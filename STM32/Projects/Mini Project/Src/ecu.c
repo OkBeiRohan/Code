@@ -21,8 +21,8 @@
 
 #define TIM_FREQ 16000000 // 16 MHz (Frequency of the TIM3 clock)
 
-#define CAR_STATUS_POS 2
-#define CAR_STATUS_LINE 0
+#define ENGINE_STATUS_POS 2
+#define ENGINE_STATUS_LINE 0
 
 #define LIGHT_STATUS_POS 7
 #define LIGHT_STATUS_LINE 0
@@ -32,6 +32,9 @@
 
 #define FUEL_LEVEL_POS 2
 #define FUEL_LEVEL_LINE 1
+
+#define TURN_STATUS_POS 9
+#define TURN_STATUS_LINE 1
 
 enum UART_STATUS uart_status = UART_OK;
 enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
@@ -151,7 +154,7 @@ void initialize_ecu(void)
     {
         set_lcd_mode(CLEAR_SCREEN);
         lcd_print(0, 0, "C:OFF L:OFF U:OK");
-        lcd_print(0, 1, "F:000% S:ENG OFF");
+        lcd_print(0, 1, "F:000% T:OFF");
     }
 }
 
@@ -194,7 +197,7 @@ void uart_signal_check(void)
         uart_status = UART_OK;
         if (mode == LCD_ON)
         {
-            lcd_print(2, 1, "OK");
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OK");
         }
     }
     else
@@ -204,7 +207,7 @@ void uart_signal_check(void)
             uart_status = UART_NOT_OK;
             if (mode == LCD_ON)
             {
-                lcd_print(2, 1, "ER");
+                lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "ER");
             }
         }
     }
@@ -282,7 +285,7 @@ void check_fuel_status()
     while (!(ADC1->SR & ADC_SR_EOC))
         ;                                 // Wait for the conversion to finish
     fuel_level = (ADC1->DR) * 100 / 4095; // Read the converted value
-    lcd_print_int(6, 1, fuel_level, 1);
+    lcd_print_int(FUEL_LEVEL_POS, FUEL_LEVEL_LINE, fuel_level, 1);
 }
 
 void TIM2_IRQHandler()
@@ -456,7 +459,7 @@ void set_ignition(enum ENGINE_STATUS status)
         engine_status = ENGINE_ON;
         if (mode == LCD_ON)
         {
-            lcd_print(4, 0, "ON ");
+            lcd_print(ENGINE_STATUS_POS, ENGINE_STATUS_LINE, "ON ");
         }
         else
         {
@@ -468,7 +471,7 @@ void set_ignition(enum ENGINE_STATUS status)
         engine_status = ENGINE_OFF;
         if (mode == LCD_ON)
         {
-            lcd_print(4, 0, "OFF");
+            lcd_print(ENGINE_STATUS_POS, ENGINE_STATUS_LINE, "OFF");
         }
         else
         {
@@ -491,7 +494,7 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         }
         else
         {
-            lcd_print(9, 1, "OFF  ");
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "OFF  ");
         }
     }
     else if (status == TURN_INDICATOR_LEFT)
@@ -506,7 +509,7 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         }
         else
         {
-            lcd_print(9, 1, "LEFT ");
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "LEFT ");
         }
     }
     else if (status == TURN_INDICATOR_RIGHT)
@@ -521,7 +524,7 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
         }
         else
         {
-            lcd_print(9, 1, "RIGHT");
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "RIGHT");
         }
     }
 }
@@ -533,10 +536,8 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         if (mode == LCD_OFF)
         {
             stop_pwm();
-        }
-        if (headlight_status == PARKING_LIGHT_ON)
-        {
-            if (mode == LCD_OFF)
+            set_bit(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);
+            if (headlight_status == PARKING_LIGHT_ON)
             {
                 stop_timer();
                 set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
@@ -544,13 +545,9 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
                 clr_bit(BUZZER_PORT, BUZZER_PIN);
             }
         }
-        if (mode == LCD_OFF)
-        {
-            set_bit(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);
-        }
         else
         {
-            lcd_print(9, 0, "OFF ");
+            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "OFF");
         }
         headlight_status = HEAD_LIGHT_OFF;
     }
@@ -559,7 +556,7 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         headlight_status = HEAD_LIGHT_LOW_BEAM;
         if (mode == LCD_ON)
         {
-            lcd_print(9, 0, "LOW ");
+            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "LOW");
         }
         else
         {
@@ -571,7 +568,7 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         headlight_status = HEAD_LIGHT_HIGH_BEAM;
         if (mode == LCD_ON)
         {
-            lcd_print(9, 0, "HIGH");
+            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "HI ");
         }
         else
         {
@@ -586,13 +583,13 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         {
             set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            set_bit(BUZZER_PORT, BUZZER_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
             stop_pwm();
             start_timer(500);
         }
         else
         {
-            lcd_print(9, 0, "PARK");
+            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "PRK");
         }
     }
 }
