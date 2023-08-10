@@ -8,7 +8,7 @@
 #ifndef LCD_H_
 #define LCD_H_
 
-#include "stm32f405xx.h"
+#include "stm32f4xx.h"
 
 /**
  * Register Select

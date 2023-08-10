@@ -293,22 +293,21 @@ void initialize_exti_buttons(void)
     EXTI->RTSR |= EXTI_RTSR_TR7;  // Set EXTI7 to rising edge
     EXTI->RTSR |= EXTI_RTSR_TR15; // Set EXTI15 to rising edge
 
-    // EXTI->FTSR |= EXTI_FTSR_TR3;  // Set EXTI3 to falling edge
+    // uint32_t volatile *NVIC_ISER0 = (uint32_t *)0xE000E100; // Address of the NVIC ISER0 register
+    // *NVIC_ISER0 |= (1 << 9);                                // Enable the EXTI3 global interrupt
+    // *NVIC_ISER0 |= (1 << 10);                               // Enable the EXTI4 global interrupt
+    // *NVIC_ISER0 |= (1 << 23);                               // Enable the EXTI9_5 global interrupt
 
-    uint32_t volatile *NVIC_ISER0 = (uint32_t *)0xE000E100; // Address of the NVIC ISER0 register
-    *NVIC_ISER0 |= (1 << 9);                                // Enable the EXTI3 global interrupt
-    *NVIC_ISER0 |= (1 << 10);                               // Enable the EXTI4 global interrupt
-    // *NVIC_ISER0 |= (1 << 7);                                // Enable the EXTI7 global interrupt
-    *NVIC_ISER0 |= (1 << 15); // Enable the EXTI15_10 global interrupt
-    *NVIC_ISER0 |= (1 << 23); // Enable the EXTI9_5 global interrupt
+    NVIC_EnableIRQ(EXTI3_IRQn);     // Enable the EXTI3 global interrupt
+    NVIC_EnableIRQ(EXTI4_IRQn);     // Enable the EXTI4 global interrupt
+    NVIC_EnableIRQ(EXTI9_5_IRQn);   // Enable the EXTI9_5 global interrupt
+    NVIC_EnableIRQ(EXTI15_10_IRQn); // Enable the EXTI15_10 global interrupt
 }
 
 void ignition_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR3)
     {
-        EXTI->PR |= EXTI_PR_PR3; // Clear the pending bit
-
         if (engine_status == ENGINE_OFF)
         {
             set_ignition(ENGINE_ON);
@@ -319,6 +318,8 @@ void ignition_handler(void)
             set_turn_indicator(TURN_INDICATOR_OFF);
             set_head_light(HEAD_LIGHT_OFF);
         }
+
+        EXTI->PR |= EXTI_PR_PR3; // Clear the pending bit
     }
 }
 
@@ -326,8 +327,6 @@ void left_turn_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR4)
     {
-        EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
-
         if (engine_status == ENGINE_OFF || headlight_status == PARKING_LIGHT_ON)
         {
             return;
@@ -341,13 +340,14 @@ void left_turn_handler(void)
         {
             set_turn_indicator(TURN_INDICATOR_OFF);
         }
+
+        EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
     }
 }
 void right_turn_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR7)
     {
-        EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
 
         if (engine_status == ENGINE_OFF || headlight_status == PARKING_LIGHT_ON)
         {
@@ -362,6 +362,8 @@ void right_turn_handler(void)
         {
             set_turn_indicator(TURN_INDICATOR_OFF);
         }
+
+        EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
     }
 }
 
@@ -369,13 +371,10 @@ void head_light_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR15)
     {
-        EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
-
         if (engine_status == ENGINE_OFF)
         {
             return;
         }
-
         if (headlight_status == HEAD_LIGHT_OFF)
         {
             set_head_light(HEAD_LIGHT_LOW_BEAM);
@@ -395,6 +394,12 @@ void head_light_handler(void)
                 set_head_light(HEAD_LIGHT_OFF);
             }
         }
+        else if (headlight_status == PARKING_LIGHT_ON)
+        {
+            set_head_light(HEAD_LIGHT_OFF);
+        }
+
+        EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
     }
 }
 
