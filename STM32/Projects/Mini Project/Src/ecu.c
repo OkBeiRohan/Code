@@ -25,7 +25,7 @@ enum UART_STATUS uart_status = UART_OK;
 enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
 enum TURN_INDICATOR_STATUS turn_indicator_status = TURN_INDICATOR_OFF;
 enum ENGINE_STATUS engine_status = ENGINE_OFF;
-enum MODE mode = LCD_ON;
+enum ECU_MODE mode = LCD_ON;
 uint8_t uart_data = 0x0;
 
 /**
@@ -82,6 +82,11 @@ void initialize_timer(void);
  * Initialize the EXTI for the buttons (SW1, SW2, SW3 and SW4)
  */
 void initialize_exti_buttons(void);
+
+void set_mode(enum ECU_MODE new_mode)
+{
+    mode = new_mode;
+}
 
 void initialize_ecu(void)
 {

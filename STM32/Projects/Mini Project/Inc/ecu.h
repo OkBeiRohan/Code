@@ -104,7 +104,7 @@
  * ON: The LCD is turned ON, LEDs are OFF
  * OFF: The LCD is turned OFF, LEDs are ON
  */
-enum MODE
+enum ECU_MODE
 {
     LCD_ON,
     LCD_OFF
@@ -198,5 +198,7 @@ void ignition_handler(void);
 void left_turn_handler(void);
 void right_turn_handler(void);
 void head_light_handler(void);
+
+void set_mode(enum ECU_MODE);
 
 #endif /* ECU_H_ */
