@@ -22,12 +22,12 @@
  */
 /* USER CODE END Header */
 /* Includes ------------------------------------------------------------------*/
-#include <main.h>
-#include <common.h>
+#include "main.h"
 
 /* Private includes ----------------------------------------------------------*/
 /* USER CODE BEGIN Includes */
 
+#include <common.h>
 /* USER CODE END Includes */
 
 /* Private typedef -----------------------------------------------------------*/
@@ -83,6 +83,9 @@ static void MX_CAN2_Init(void);
  */
 int main(void)
 {
+  lcd_init(BIT_4_MODE);
+  lcd_print(0, 0, "Status: Init...");
+  lcd_print(0, 1, "Data:");
   /* USER CODE BEGIN 1 */
 
   /* USER CODE END 1 */
@@ -108,8 +111,6 @@ int main(void)
   MX_CAN1_Init();
   MX_CAN2_Init();
   /* USER CODE BEGIN 2 */
-  lcd_init(BIT_4_MODE);
-  HAL_Delay(200);
 
   aData[0] = 'R';
   aData[1] = 'e';
@@ -136,17 +137,18 @@ int main(void)
 
   HAL_CAN_Start(&hcan1);
   HAL_CAN_Start(&hcan2);
+
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    lcd_print(0, 0, "Sending  ");
+    lcd_print(7, 0, "Sending  ");
     HAL_CAN_AddTxMessage(&hcan1, &p1header, aData, &pTxMailbox);
-    lcd_print(0, 0, "Receiving");
+    lcd_print(7, 0, "Receiving");
     HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &p2header, received_data);
-    lcd_print(0, 1, (char *)received_data);
+    lcd_print(5, 1, (char *)received_data);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -274,19 +276,19 @@ static void MX_CAN2_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
-
   /* USER CODE BEGIN MX_GPIO_Init_1 */
   /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
-  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOA_CLK_ENABLE();
+  __HAL_RCC_GPIOB_CLK_ENABLE();
   __HAL_RCC_GPIOC_CLK_ENABLE();
 
-  HAL_GPIO_WritePin(GPIOC, 0 | 3, GPIO_PIN_RESET);
+  /*Configure GPIO pin Output Level */
+  HAL_GPIO_WritePin(GPIOC, STB1_Pin | STB2_Pin, GPIO_PIN_RESET);
 
-  /*Configure GPIO pins : STB1_Pin STB2_Pin*/
-  GPIO_InitStruct.Pin = 0 | 3;
+  /*Configure GPIO pins : STB1_Pin STB2_Pin */
+  GPIO_InitStruct.Pin = STB1_Pin | STB2_Pin;
   GPIO_InitStruct.Mode = GPIO_MODE_OUTPUT_PP;
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
