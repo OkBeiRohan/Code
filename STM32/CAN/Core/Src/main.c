@@ -58,7 +58,8 @@ uint32_t pTxMailbox = CAN_TX_MAILBOX0, RxFifo = CAN_RX_FIFO0;
 
 CAN_FilterTypeDef sFilterConfig;
 
-uint8_t aData[8] = "BOSCH: ", received_data[8];
+uint8_t aData[8] = {'c', 'h', 'a', 'r', '-', 0, '\0'},
+        received_data[8];
 uint8_t can_data, Can_id;
 
 /* USER CODE END PV */
@@ -140,11 +141,11 @@ int main(void)
   {
     /* USER CODE END WHILE */
     lcd_print(7, 0, "Sending  ");
-    aData[6]++;
+    aData[5]++;
     HAL_CAN_AddTxMessage(&hcan1, &p1header, aData, &pTxMailbox);
     lcd_print(7, 0, "Receiving");
     HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &p2header, received_data);
-    lcd_print(5, 1, (char *)received_data);
+    lcd_print(6, 1, (char *)received_data);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
