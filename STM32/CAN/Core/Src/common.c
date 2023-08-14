@@ -112,11 +112,21 @@ void lcd_init(enum lcd_modes bit_8)
     /**
      * Initialize the LCD
      */
-    lcd_fn(0, 0x33);
-    lcd_fn(0, 0x32);
-    lcd_fn(0, 0x28);
-    lcd_fn(0, 0x0c);
-    lcd_fn(0, 0x01);
+    if (enable_8_bit)
+    {
+        lcd_fn(0, 0x01);
+        lcd_fn(0, 0x38);
+        lcd_fn(0, 0x06);
+        lcd_fn(0, 0x0C);
+    }
+    else
+    {
+        lcd_fn(0, 0x33);
+        lcd_fn(0, 0x32);
+        lcd_fn(0, 0x28);
+        lcd_fn(0, 0x0c);
+        lcd_fn(0, 0x01);
+    }
 }
 
 void lcd_fn(uint8_t is_command, uint8_t value)
