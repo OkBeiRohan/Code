@@ -41,21 +41,29 @@
 
 /* Private variables ---------------------------------------------------------*/
 CAN_HandleTypeDef hcan1;
+CAN_HandleTypeDef hcan2;
+
+TIM_HandleTypeDef htim6;
 
 /* USER CODE BEGIN PV */
-uint8_t tx_buff[8] = "char- ", rx_buff[8];
 CAN_TxHeaderTypeDef p1header;
 CAN_RxHeaderTypeDef p2header;
 uint32_t pTxMailbox = CAN_TX_MAILBOX0, RxFifo = CAN_RX_FIFO0;
 CAN_FilterTypeDef sFilterConfig;
-uint8_t rx_stat = 0, tx_stat = 0;
+uint8_t aData[8], received_data[8];
+uint8_t can_data, Can_id;
 
+int Flag100msec;
+int i;
 /* USER CODE END PV */
 
 /* Private function prototypes -----------------------------------------------*/
 void SystemClock_Config(void);
 static void MX_GPIO_Init(void);
 static void MX_CAN1_Init(void);
+static void MX_CAN2_Init(void);
+static void MX_TIM6_Init(void);
+void Time(unsigned char Value);
 /* USER CODE BEGIN PFP */
 
 /* USER CODE END PFP */
@@ -94,14 +102,20 @@ int main(void)
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN1_Init();
+  MX_CAN2_Init();
+  MX_TIM6_Init();
   /* USER CODE BEGIN 2 */
-  lcd_init(BIT_8_MODE);
-  lcd_print(0, 0, "Status: Init...");
-  lcd_print(0, 1, "Data:");
-  HAL_Delay(200);
-
+  HAL_Delay(500);
   HAL_GPIO_WritePin(GPIOC, STB1_Pin, GPIO_PIN_RESET);
-
+  HAL_GPIO_WritePin(GPIOC, STB2_Pin, GPIO_PIN_RESET);
+  aData[0] = 'R';
+  aData[1] = 'e';
+  aData[2] = 'c';
+  aData[3] = 'e';
+  aData[4] = 'i';
+  aData[5] = 'v';
+  aData[6] = 'e';
+  aData[7] = 'd';
   p1header.DLC = 8;
   p1header.IDE = CAN_ID_STD;
   p1header.StdId = 0x001;
@@ -115,35 +129,20 @@ int main(void)
   sFilterConfig.FilterScale = CAN_FILTERSCALE_32BIT;
   sFilterConfig.FilterActivation = ENABLE;
   HAL_CAN_ConfigFilter(&hcan1, &sFilterConfig);
+  HAL_CAN_ConfigFilter(&hcan2, &sFilterConfig);
 
   HAL_CAN_Start(&hcan1);
-
+  HAL_CAN_Start(&hcan2);
+  lcd_init(BIT_8_MODE);
   /* USER CODE END 2 */
 
   /* Infinite loop */
   /* USER CODE BEGIN WHILE */
   while (1)
   {
-    lcd_print(7, 0, "Sending  ");
-    rx_stat = HAL_CAN_AddTxMessage(&hcan1, &p1header, tx_buff, &pTxMailbox);
-    if (rx_stat != HAL_OK)
-    {
-      lcd_print(7, 0, "Tx Failed");
-      HAL_Delay(1000);
-      continue;
-    }
-    lcd_print(7, 0, "Receiving");
-    tx_stat = HAL_CAN_GetRxMessage(&hcan1, RxFifo, &p2header, rx_buff);
-    if (tx_stat != HAL_OK)
-    {
-      lcd_print(7, 0, "Rx Failed");
-      HAL_Delay(1000);
-      continue;
-    }
-    lcd_print(7, 0, "Received ");
-    lcd_print(6, 1, (char *)rx_buff);
-    lcd_print_int(13, 1, rx_buff[5], 1);
-    tx_buff[5]++;
+    HAL_CAN_GetRxMessage(&hcan1, CAN_RX_FIFO0, &p2header, received_data);
+    Can_id = p1header.StdId;
+    lcd_print(0, 0, (char *)received_data);
     /* USER CODE END WHILE */
 
     /* USER CODE BEGIN 3 */
@@ -232,6 +231,73 @@ static void MX_CAN1_Init(void)
  * @param None
  * @retval None
  */
+static void MX_CAN2_Init(void)
+{
+
+  /* USER CODE BEGIN CAN2_Init 0 */
+
+  /* USER CODE END CAN2_Init 0 */
+
+  /* USER CODE BEGIN CAN2_Init 1 */
+
+  /* USER CODE END CAN2_Init 1 */
+  hcan2.Instance = CAN2;
+  hcan2.Init.Prescaler = 8;
+  hcan2.Init.Mode = CAN_MODE_NORMAL;
+  hcan2.Init.SyncJumpWidth = CAN_SJW_1TQ;
+  hcan2.Init.TimeSeg1 = CAN_BS1_6TQ;
+  hcan2.Init.TimeSeg2 = CAN_BS2_1TQ;
+  hcan2.Init.TimeTriggeredMode = DISABLE;
+  hcan2.Init.AutoBusOff = DISABLE;
+  hcan2.Init.AutoWakeUp = DISABLE;
+  hcan2.Init.AutoRetransmission = DISABLE;
+  hcan2.Init.ReceiveFifoLocked = DISABLE;
+  hcan2.Init.TransmitFifoPriority = DISABLE;
+  if (HAL_CAN_Init(&hcan2) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN CAN2_Init 2 */
+
+  /* USER CODE END CAN2_Init 2 */
+}
+
+/**
+ * @brief TIM6 Initialization Function
+ * @param None
+ * @retval None
+ */
+static void MX_TIM6_Init(void)
+{
+
+  /* USER CODE BEGIN TIM6_Init 0 */
+
+  /* USER CODE END TIM6_Init 0 */
+
+  TIM_MasterConfigTypeDef sMasterConfig = {0};
+
+  /* USER CODE BEGIN TIM6_Init 1 */
+
+  /* USER CODE END TIM6_Init 1 */
+  htim6.Instance = TIM6;
+  htim6.Init.Prescaler = 0;
+  htim6.Init.CounterMode = TIM_COUNTERMODE_UP;
+  htim6.Init.Period = 65535;
+  htim6.Init.AutoReloadPreload = TIM_AUTORELOAD_PRELOAD_DISABLE;
+  if (HAL_TIM_Base_Init(&htim6) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  sMasterConfig.MasterOutputTrigger = TIM_TRGO_RESET;
+  sMasterConfig.MasterSlaveMode = TIM_MASTERSLAVEMODE_DISABLE;
+  if (HAL_TIMEx_MasterConfigSynchronization(&htim6, &sMasterConfig) != HAL_OK)
+  {
+    Error_Handler();
+  }
+  /* USER CODE BEGIN TIM6_Init 2 */
+
+  /* USER CODE END TIM6_Init 2 */
+}
 
 /**
  * @brief GPIO Initialization Function
@@ -263,7 +329,20 @@ static void MX_GPIO_Init(void)
 }
 
 /* USER CODE BEGIN 4 */
+void HAL_TIM_PeriodElapsedCallback(TIM_HandleTypeDef *htim)
+{
+  if (htim == &htim6)
+  {
+    HAL_CAN_AddTxMessage(&hcan2, &p1header, aData, &pTxMailbox);
+    Flag100msec = 1;
+  }
+}
 
+void Time(unsigned char Value)
+{
+  lcd_print_int(0, 0, ((Value % 100) / 10) + 0X30, 1);
+  lcd_print_int(0, 0, (Value % 10) + 0X30, 1);
+}
 /* USER CODE END 4 */
 
 /**

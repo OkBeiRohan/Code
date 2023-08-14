@@ -146,6 +146,7 @@ int main(void)
     lcd_print(7, 0, "Receiving");
     HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &p2header, received_data);
     lcd_print(6, 1, (char *)received_data);
+    lcd_print_int(13, 1, received_data[5], 1);
     /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
