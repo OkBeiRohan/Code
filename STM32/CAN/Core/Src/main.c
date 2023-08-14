@@ -58,7 +58,7 @@ uint32_t pTxMailbox = CAN_TX_MAILBOX0, RxFifo = CAN_RX_FIFO0;
 
 CAN_FilterTypeDef sFilterConfig;
 
-uint8_t aData[8], received_data[8];
+uint8_t aData[8] = "BOSCH: ", received_data[8];
 uint8_t can_data, Can_id;
 
 /* USER CODE END PV */
@@ -72,13 +72,37 @@ static void MX_CAN2_Init(void);
 
 /* USER CODE END PFP */
 
+/* Private user code ---------------------------------------------------------*/
+/* USER CODE BEGIN 0 */
+
+/* USER CODE END 0 */
+
+/**
+ * @brief  The application entry point.
+ * @retval int
+ */
 int main(void)
 {
+  /* USER CODE BEGIN 1 */
+
+  /* USER CODE END 1 */
+
+  /* MCU Configuration--------------------------------------------------------*/
 
   /* Reset of all peripherals, Initializes the Flash interface and the Systick. */
   HAL_Init();
+
+  /* USER CODE BEGIN Init */
+
+  /* USER CODE END Init */
+
   /* Configure the system clock */
   SystemClock_Config();
+
+  /* USER CODE BEGIN SysInit */
+
+  /* USER CODE END SysInit */
+
   /* Initialize all configured peripherals */
   MX_GPIO_Init();
   MX_CAN1_Init();
@@ -91,14 +115,6 @@ int main(void)
 
   HAL_GPIO_WritePin(GPIOC, STB1_Pin, GPIO_PIN_RESET);
   HAL_GPIO_WritePin(GPIOC, STB2_Pin, GPIO_PIN_RESET);
-  aData[0] = 'R';
-  aData[1] = 'e';
-  aData[2] = 'c';
-  aData[3] = 'e';
-  aData[4] = 'i';
-  aData[5] = 'v';
-  aData[6] = 'e';
-  aData[7] = 'd';
   p1header.DLC = 8;
   p1header.IDE = CAN_ID_STD;
   p1header.StdId = 0x001;
@@ -122,11 +138,14 @@ int main(void)
   /* USER CODE BEGIN WHILE */
   while (1)
   {
+    /* USER CODE END WHILE */
     lcd_print(7, 0, "Sending  ");
+    aData[6]++;
     HAL_CAN_AddTxMessage(&hcan1, &p1header, aData, &pTxMailbox);
     lcd_print(7, 0, "Receiving");
     HAL_CAN_GetRxMessage(&hcan2, CAN_RX_FIFO0, &p2header, received_data);
     lcd_print(5, 1, (char *)received_data);
+    /* USER CODE BEGIN 3 */
   }
   /* USER CODE END 3 */
 }
@@ -178,6 +197,13 @@ void SystemClock_Config(void)
  */
 static void MX_CAN1_Init(void)
 {
+
+  /* USER CODE BEGIN CAN1_Init 0 */
+
+  /* USER CODE END CAN1_Init 0 */
+
+  /* USER CODE BEGIN CAN1_Init 1 */
+
   /* USER CODE END CAN1_Init 1 */
   hcan1.Instance = CAN1;
   hcan1.Init.Prescaler = 8;
@@ -195,6 +221,9 @@ static void MX_CAN1_Init(void)
   {
     Error_Handler();
   }
+  /* USER CODE BEGIN CAN1_Init 2 */
+
+  /* USER CODE END CAN1_Init 2 */
 }
 
 /**
@@ -204,6 +233,14 @@ static void MX_CAN1_Init(void)
  */
 static void MX_CAN2_Init(void)
 {
+
+  /* USER CODE BEGIN CAN2_Init 0 */
+
+  /* USER CODE END CAN2_Init 0 */
+
+  /* USER CODE BEGIN CAN2_Init 1 */
+
+  /* USER CODE END CAN2_Init 1 */
   hcan2.Instance = CAN2;
   hcan2.Init.Prescaler = 8;
   hcan2.Init.Mode = CAN_MODE_NORMAL;
@@ -233,6 +270,8 @@ static void MX_CAN2_Init(void)
 static void MX_GPIO_Init(void)
 {
   GPIO_InitTypeDef GPIO_InitStruct = {0};
+  /* USER CODE BEGIN MX_GPIO_Init_1 */
+  /* USER CODE END MX_GPIO_Init_1 */
 
   /* GPIO Ports Clock Enable */
   __HAL_RCC_GPIOC_CLK_ENABLE();
@@ -249,7 +288,13 @@ static void MX_GPIO_Init(void)
   GPIO_InitStruct.Pull = GPIO_NOPULL;
   GPIO_InitStruct.Speed = GPIO_SPEED_FREQ_LOW;
   HAL_GPIO_Init(GPIOC, &GPIO_InitStruct);
+
+  /* USER CODE BEGIN MX_GPIO_Init_2 */
+  /* USER CODE END MX_GPIO_Init_2 */
 }
+
+/* USER CODE BEGIN 4 */
+
 /* USER CODE END 4 */
 
 /**
