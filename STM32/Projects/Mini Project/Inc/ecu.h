@@ -126,12 +126,14 @@ enum ENGINE_STATUS
  * OFF: No turn indicator is working or is turned OFF
  * LEFT: Left turn indicator is turned ON
  * RIGHT: Right turn indicator is turned ON
+ * PARKING: Parking lights are ON
  */
 enum TURN_INDICATOR_STATUS
 {
     TURN_INDICATOR_OFF,
     TURN_INDICATOR_LEFT,
-    TURN_INDICATOR_RIGHT
+    TURN_INDICATOR_RIGHT,
+    PARKING_LIGHT_ON
 };
 
 /**
@@ -139,14 +141,12 @@ enum TURN_INDICATOR_STATUS
  * OFF: Headlights are turned OFF
  * LOW: Headlights are dimmed (Low intensity)
  * HIGH: Headlights are bright (High intensity)
- * PARKING: Parking lights are ON
  */
 enum HEAD_LIGHT_STATUS
 {
     HEAD_LIGHT_OFF,
     HEAD_LIGHT_LOW_BEAM,
     HEAD_LIGHT_HIGH_BEAM,
-    PARKING_LIGHT_ON
 };
 
 /**

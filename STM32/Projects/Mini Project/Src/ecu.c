@@ -80,8 +80,9 @@ void stop_timer(void);
 /**
  * @brief Write a byte to the UART
  * @param data Data to be written
+ * @return Status of the transmission
  */
-void uart_write(uint8_t);
+enum UART_STATUS uart_write(uint8_t);
 
 /**
  * @brief Read a byte from the UART
@@ -178,23 +179,41 @@ void initialize_uart(void)
     UART4->CR1 |= USART_CR1_UE | USART_CR1_TE | USART_CR1_RE; // Enable the UART, Transmitter and Receiver
 }
 
-void uart_write(uint8_t data)
+enum UART_STATUS uart_write(uint8_t data)
 {
-    UART4->DR = data; // Write the data to the transmit buffer
-    while (!(UART4->SR & USART_SR_TC))
-        ; // Wait for the transmission to be complete
+    uint32_t counter = 0;
+    UART4->DR = data;                  // Write the data to the transmit buffer
+    while (!(UART4->SR & USART_SR_TC)) // Wait for the transmission to be complete
+    {
+        if (counter >= 10000)
+        {
+            UART4->DR = 0;
+            return UART_NOT_OK;
+        }
+        counter++;
+    };
+    return UART_OK;
 }
 
 uint8_t uart_read(void)
 {
+    uint32_t counter = 0;
     while (!(UART4->SR & USART_SR_RXNE))
-        ;             // Wait for the receive buffer to be empty
+    {
+        if (counter >= 10000)
+        {
+            UART4->DR = 0;
+            break;
+        }
+        counter++;
+    };                // Wait for the receive buffer to be empty
     return UART4->DR; // Read the data from the receive buffer
 }
 
 void uart_signal_check(void)
 {
-    uart_write((uint8_t)UART_TRANSMIT_DATA);
+    enum UART_STATUS tx_status;
+    tx_status = uart_write((uint8_t)UART_TRANSMIT_DATA);
     uart_data = uart_read();
 
     if ((uart_data == (uint8_t)UART_TRANSMIT_DATA))
@@ -210,7 +229,7 @@ void uart_signal_check(void)
     }
     else
     {
-        if (uart_status != UART_NOT_OK)
+        if (uart_status != UART_NOT_OK || tx_status == UART_NOT_OK)
         {
             uart_status = UART_NOT_OK;
             if (mode == LCD_ON)
@@ -284,6 +303,7 @@ void initialize_adc(void)
 
 void check_fuel_status()
 {
+    uint32_t counter = 0;
     if (engine_status == ENGINE_OFF)
     {
         if (fuel_level != 0)
@@ -296,9 +316,16 @@ void check_fuel_status()
         }
         return;
     }
-    ADC1->CR2 |= ADC_CR2_SWSTART; // Start the conversion
-    while (!(ADC1->SR & ADC_SR_EOC))
-        ;                                                 // Wait for the conversion to finish
+    ADC1->CR2 |= ADC_CR2_SWSTART;    // Start the conversion
+    while (!(ADC1->SR & ADC_SR_EOC)) // Wait for the conversion to finish
+    {
+        if (counter >= 10000)
+        {
+            return;
+            counter = 0;
+        }
+        counter++;
+    };
     uint8_t fuel_range_changed = 0;                       // Flag to check if the fuel range has changed
     uint8_t curr_level = ((ADC1->DR) / 10) * 100 / 409.5; // Read the converted value
     fuel_range_changed = (curr_level != fuel_level) ? 1 : 0;
@@ -323,7 +350,7 @@ void TIM2_IRQHandler()
             cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
             cpl_bit(BUZZER_PORT, BUZZER_PIN);
         }
-        else if (headlight_status == PARKING_LIGHT_ON)
+        else if (turn_indicator_status == PARKING_LIGHT_ON)
         {
             cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
@@ -405,7 +432,7 @@ void left_turn_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR4)
     {
-        if (engine_status == ENGINE_OFF || headlight_status == PARKING_LIGHT_ON)
+        if (engine_status == ENGINE_OFF)
         {
             EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
             return;
@@ -427,8 +454,7 @@ void right_turn_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR7)
     {
-
-        if (engine_status == ENGINE_OFF || headlight_status == PARKING_LIGHT_ON)
+        if (engine_status == ENGINE_OFF)
         {
             EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
             return;
@@ -468,16 +494,17 @@ void head_light_handler(void)
         {
             if (turn_indicator_status == TURN_INDICATOR_OFF)
             {
-                set_head_light(PARKING_LIGHT_ON);
+                set_turn_indicator(PARKING_LIGHT_ON);
+            }
+            else if (turn_indicator_status == PARKING_LIGHT_ON)
+            {
+                set_head_light(HEAD_LIGHT_OFF);
+                set_turn_indicator(TURN_INDICATOR_OFF);
             }
             else
             {
                 set_head_light(HEAD_LIGHT_OFF);
             }
-        }
-        else if (headlight_status == PARKING_LIGHT_ON)
-        {
-            set_head_light(HEAD_LIGHT_OFF);
         }
 
         EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
@@ -559,6 +586,21 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
             lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "RIGHT");
         }
     }
+    else if (status == PARKING_LIGHT_ON)
+    {
+        turn_indicator_status = PARKING_LIGHT_ON;
+        if (mode == LCD_OFF)
+        {
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
+            start_timer(250);
+        }
+        else
+        {
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "PARK ");
+        }
+    }
 }
 
 void set_head_light(enum HEAD_LIGHT_STATUS status)
@@ -568,13 +610,6 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         if (mode == LCD_OFF)
         {
             stop_pwm();
-            if (headlight_status == PARKING_LIGHT_ON)
-            {
-                stop_timer();
-                set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-                set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-                clr_bit(BUZZER_PORT, BUZZER_PIN);
-            }
         }
         else
         {
@@ -605,22 +640,6 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         {
             stop_pwm();
             start_pwm(90, 10000); // PWM with 90% duty cycle
-        }
-    }
-    else if (status == PARKING_LIGHT_ON)
-    {
-        headlight_status = PARKING_LIGHT_ON;
-        if (mode == LCD_OFF)
-        {
-            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            clr_bit(BUZZER_PORT, BUZZER_PIN);
-            stop_pwm();
-            start_timer(500);
-        }
-        else
-        {
-            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "PRK");
         }
     }
 }
