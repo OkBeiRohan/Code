@@ -30,23 +30,3 @@ int main(void)
     check_fuel_status();
   }
 }
-
-void EXTI3_IRQHandler(void)
-{
-  ignition_handler();
-}
-
-void EXTI4_IRQHandler(void)
-{
-  left_turn_handler();
-}
-
-void EXTI9_5_IRQHandler(void)
-{
-  right_turn_handler();
-}
-
-void EXTI15_10_IRQHandler(void)
-{
-  head_light_handler();
-}

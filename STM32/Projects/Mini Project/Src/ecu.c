@@ -105,6 +105,26 @@ void initialize_exti_buttons(void);
  */
 void initialize_adc(void);
 
+/**
+ * @brief Handles the ignition key
+ */
+void ignition_handler(void);
+
+/**
+ * @brief Handles the left turn switch
+ */
+void left_turn_handler(void);
+
+/**
+ * @brief Handles the right turn switch
+ */
+void right_turn_handler(void);
+
+/**
+ * @brief Handles the head light switch
+ */
+void head_light_handler(void);
+
 void set_mode(enum ECU_MODE new_mode)
 {
     mode = new_mode;
@@ -214,7 +234,14 @@ void uart_signal_check(void)
 {
     enum UART_STATUS tx_status;
     tx_status = uart_write((uint8_t)UART_TRANSMIT_DATA);
-    uart_data = uart_read();
+    if (tx_status == UART_OK)
+    {
+        uart_data = uart_read();
+    }
+    else
+    {
+        uart_data = 0;
+    }
 
     if ((uart_data == (uint8_t)UART_TRANSMIT_DATA))
     {
@@ -229,7 +256,7 @@ void uart_signal_check(void)
     }
     else
     {
-        if (uart_status != UART_NOT_OK || tx_status == UART_NOT_OK)
+        if (uart_status != UART_NOT_OK)
         {
             uart_status = UART_NOT_OK;
             if (mode == LCD_ON)
@@ -407,6 +434,26 @@ void initialize_exti_buttons(void)
 
     NVIC_EnableIRQ(EXTI15_10_IRQn);      // Enable the EXTI15_10 global interrupt
     NVIC_SetPriority(EXTI15_10_IRQn, 1); // Set the priority of the EXTI15_10 interrupt to 1 (second highest priority)
+}
+
+void EXTI3_IRQHandler(void)
+{
+    ignition_handler();
+}
+
+void EXTI4_IRQHandler(void)
+{
+    left_turn_handler();
+}
+
+void EXTI9_5_IRQHandler(void)
+{
+    right_turn_handler();
+}
+
+void EXTI15_10_IRQHandler(void)
+{
+    head_light_handler();
 }
 
 void ignition_handler(void)

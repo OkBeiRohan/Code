@@ -194,11 +194,6 @@ void set_ignition(enum ENGINE_STATUS);
  */
 void uart_signal_check(void);
 
-void ignition_handler(void);
-void left_turn_handler(void);
-void right_turn_handler(void);
-void head_light_handler(void);
-
 /**
  * Sets the mode of working
  * @param mode The mode of working
