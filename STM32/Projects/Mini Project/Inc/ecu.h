@@ -90,9 +90,9 @@
 #define UART_TRANSMIT_DATA 'j'
 
 /**
- * The GPIO port and pin for the UART
- * TX (PA0)
- * RX (PA1)
+ * The GPIO port and pin for the UART4
+ * TX (PC11)
+ * RX (PC10)
  */
 #define UART_TX_PORT GPIOC
 #define UART_TX_PIN 10
