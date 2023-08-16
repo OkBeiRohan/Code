@@ -182,7 +182,7 @@ void uart_write(uint8_t data)
 {
     UART4->DR = data; // Write the data to the transmit buffer
     while (!(UART4->SR & USART_SR_TC))
-        ;             // Wait for the transmission to be complete
+        ; // Wait for the transmission to be complete
 }
 
 uint8_t uart_read(void)
