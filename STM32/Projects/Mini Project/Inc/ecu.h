@@ -157,7 +157,8 @@ enum HEAD_LIGHT_STATUS
 enum UART_STATUS
 {
     UART_OK,
-    UART_NOT_OK
+    UART_NOT_OK,
+    UART_OFF
 };
 
 /**

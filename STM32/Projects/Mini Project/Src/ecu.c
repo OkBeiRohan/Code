@@ -36,7 +36,7 @@
 #define TURN_STATUS_POS 9
 #define TURN_STATUS_LINE 1
 
-enum UART_STATUS uart_status = UART_OK;
+enum UART_STATUS uart_status = UART_OFF;
 enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
 enum TURN_INDICATOR_STATUS turn_indicator_status = TURN_INDICATOR_OFF;
 enum ENGINE_STATUS engine_status = ENGINE_OFF;
@@ -48,6 +48,12 @@ uint8_t fuel_level = 0;
  * @brief Initialize the UART
  */
 void initialize_uart(void);
+
+/**
+ * @brief Set the ignition status
+ * @param status The status of the ignition
+ */
+void set_uart_status(enum UART_STATUS);
 
 /**
  * @brief Initialize the PWM for Head Light
@@ -179,7 +185,7 @@ void initialize_ecu(void)
     if (mode == LCD_ON)
     {
         set_lcd_mode(CLEAR_SCREEN);
-        lcd_print(0, 0, "C:OFF L:OFF U:OK");
+        lcd_print(0, 0, "C:OFF L:OFF U:OF");
         lcd_print(0, 1, "F:000% T:OFF");
     }
 }
@@ -232,6 +238,11 @@ uint8_t uart_read(void)
 
 void uart_signal_check(void)
 {
+    if (uart_status == UART_OFF || engine_status == ENGINE_OFF)
+    {
+        return;
+    }
+
     enum UART_STATUS tx_status;
     tx_status = uart_write((uint8_t)UART_TRANSMIT_DATA);
     if (tx_status == UART_OK)
@@ -245,24 +256,41 @@ void uart_signal_check(void)
 
     if ((uart_data == (uint8_t)UART_TRANSMIT_DATA))
     {
-        if (uart_status != UART_OK)
-        {
-            uart_status = UART_OK;
-            if (mode == LCD_ON)
-            {
-                lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OK");
-            }
-        }
+        set_uart_status(UART_OK);
     }
     else
     {
-        if (uart_status != UART_NOT_OK)
+        set_uart_status(UART_NOT_OK);
+    }
+}
+
+void set_uart_status(enum UART_STATUS status)
+{
+    if (engine_status == ENGINE_OFF)
+    {
+        return;
+    }
+    enum UART_STATUS prev_value = uart_status;
+    uart_status = status;
+    if (mode == LCD_ON && prev_value != status)
+    {
+        switch (status)
         {
-            uart_status = UART_NOT_OK;
-            if (mode == LCD_ON)
-            {
-                lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "ER");
-            }
+        case UART_OFF:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OF");
+            break;
+
+        case UART_OK:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OK");
+            break;
+
+        case UART_NOT_OK:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "ER");
+            break;
+
+        default:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "??");
+            break;
         }
     }
 }
@@ -463,9 +491,11 @@ void ignition_handler(void)
         if (engine_status == ENGINE_OFF)
         {
             set_ignition(ENGINE_ON);
+            set_uart_status(UART_OK);
         }
         else if (engine_status == ENGINE_ON)
         {
+            set_uart_status(UART_OFF);
             set_turn_indicator(TURN_INDICATOR_OFF);
             set_head_light(HEAD_LIGHT_OFF);
             set_ignition(ENGINE_OFF);
