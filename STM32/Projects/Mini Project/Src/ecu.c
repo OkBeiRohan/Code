@@ -637,21 +637,33 @@ void initialize_exti_buttons(void)
     NVIC_SetPriority(EXTI15_10_IRQn, 1); // Set the priority of the EXTI15_10 interrupt to 1 (second highest priority)
 }
 
+/**
+ * @brief Handles the ignition key interrupt
+ */
 void EXTI3_IRQHandler(void)
 {
     ignition_handler();
 }
 
+/**
+ * @brief Handles the left turn switch interrupt
+ */
 void EXTI4_IRQHandler(void)
 {
     left_turn_handler();
 }
 
+/**
+ * @brief Handles the right turn switch interrupt
+ */
 void EXTI9_5_IRQHandler(void)
 {
     right_turn_handler();
 }
 
+/**
+ * @brief Handles the head light switch interrupt
+ */
 void EXTI15_10_IRQHandler(void)
 {
     head_light_handler();

@@ -199,8 +199,6 @@ enum UART_STATUS
  */
 void initialize_ecu(void);
 
-
-
 /**
  * Transmit and receive data via UART
  */
