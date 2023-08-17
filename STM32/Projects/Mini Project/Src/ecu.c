@@ -228,8 +228,7 @@ uint8_t uart_read(void)
     {
         if (counter >= 10000)
         {
-            UART4->DR = 0;
-            break;
+            return 0x0;
         }
         counter++;
     };                // Wait for the receive buffer to be empty
