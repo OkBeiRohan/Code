@@ -19,23 +19,6 @@
 #include <ecu.h>
 #include <common.h>
 
-#define TIM_FREQ 16000000 // 16 MHz (Frequency of the TIM3 clock)
-
-#define ENGINE_STATUS_POS 2
-#define ENGINE_STATUS_LINE 0
-
-#define LIGHT_STATUS_POS 8
-#define LIGHT_STATUS_LINE 0
-
-#define UART_STATUS_POS 14
-#define UART_STATUS_LINE 0
-
-#define FUEL_LEVEL_POS 2
-#define FUEL_LEVEL_LINE 1
-
-#define TURN_STATUS_POS 9
-#define TURN_STATUS_LINE 1
-
 enum UART_STATUS uart_status = UART_OFF;
 enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
 enum TURN_INDICATOR_STATUS turn_indicator_status = TURN_INDICATOR_OFF;
@@ -130,6 +113,26 @@ void right_turn_handler(void);
  * @brief Handles the head light switch
  */
 void head_light_handler(void);
+
+/**
+ * Sets the turn indicator status
+ * @param status The status of the turn indicator
+ * @note If parking mode is ON, the turn indicators are unavailable
+ */
+void set_turn_indicator(enum TURN_INDICATOR_STATUS);
+
+/**
+ * Sets the headlight status
+ * @param status The status of the headlight
+ * @note If the turn indicators are ON, the parking mode is unavailable
+ */
+void set_head_light(enum HEAD_LIGHT_STATUS);
+
+/**
+ * Sets the fuel indicator status
+ * @param status The status of the fuel indicator
+ */
+void set_ignition(enum ENGINE_STATUS);
 
 void set_mode(enum ECU_MODE new_mode)
 {

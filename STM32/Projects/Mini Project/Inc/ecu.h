@@ -100,6 +100,35 @@
 #define UART_RX_PIN 11
 
 /**
+ * 16 MHz (Frequency of the TIM3 clock)
+ */
+#define TIM_FREQ 16000000
+
+/**
+ * Position and Line of the LCD for the status of the ECU
+ * Status       Position    Line
+ * Engine       2           0
+ * Light        8           0
+ * UART         14          0
+ * Fuel Level   2           1
+ * Turn         9           1
+ */
+#define ENGINE_STATUS_POS 2
+#define ENGINE_STATUS_LINE 0
+
+#define LIGHT_STATUS_POS 8
+#define LIGHT_STATUS_LINE 0
+
+#define UART_STATUS_POS 14
+#define UART_STATUS_LINE 0
+
+#define FUEL_LEVEL_POS 2
+#define FUEL_LEVEL_LINE 1
+
+#define TURN_STATUS_POS 9
+#define TURN_STATUS_LINE 1
+
+/**
  * The mode of working
  * ON: The LCD is turned ON, LEDs are OFF
  * OFF: The LCD is turned OFF, LEDs are ON
@@ -170,25 +199,7 @@ enum UART_STATUS
  */
 void initialize_ecu(void);
 
-/**
- * Sets the turn indicator status
- * @param status The status of the turn indicator
- * @note If parking mode is ON, the turn indicators are unavailable
- */
-void set_turn_indicator(enum TURN_INDICATOR_STATUS);
 
-/**
- * Sets the headlight status
- * @param status The status of the headlight
- * @note If the turn indicators are ON, the parking mode is unavailable
- */
-void set_head_light(enum HEAD_LIGHT_STATUS);
-
-/**
- * Sets the fuel indicator status
- * @param status The status of the fuel indicator
- */
-void set_ignition(enum ENGINE_STATUS);
 
 /**
  * Transmit and receive data via UART
