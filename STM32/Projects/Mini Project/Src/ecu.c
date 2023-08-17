@@ -19,12 +19,42 @@
 #include <ecu.h>
 #include <common.h>
 
+/**
+ * @brief The status of the UART
+ * @note The UART is ON only when the engine is ON
+ */
 enum UART_STATUS uart_status = UART_OFF;
+
+/**
+ * @brief The status of the headlight
+ */
 enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
+
+/**
+ * @brief The status of the turn indicator
+ */
 enum TURN_INDICATOR_STATUS turn_indicator_status = TURN_INDICATOR_OFF;
+
+/**
+ * @brief The status of the engine
+ */
 enum ENGINE_STATUS engine_status = ENGINE_OFF;
+
+/**
+ * @brief The mode of working
+ * ON: The LCD is turned ON, LEDs are OFF
+ * OFF: The LCD is turned OFF, LEDs are ON
+ */
 enum ECU_MODE mode = LCD_ON;
+
+/**
+ * @brief The data received from the UART
+ */
 uint8_t uart_data = 0x0;
+
+/**
+ * @brief The fuel level
+ */
 uint8_t fuel_level = 0;
 
 /**
