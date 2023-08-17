@@ -30,169 +30,6 @@ uint8_t fuel_level = 0;
 /**
  * @brief Initialize the UART
  */
-void initialize_uart(void);
-
-/**
- * @brief Set the ignition status
- * @param status The status of the ignition
- */
-void set_uart_status(enum UART_STATUS);
-
-/**
- * @brief Initialize the PWM for Head Light
- */
-void initialize_pwm(void);
-
-/**
- * @brief Set the duty cycle for the PWM
- * @param duty_cycle Duty Cycle (0 - 1000)
- * @param frequency Frequency (Hz)
- */
-void start_pwm(uint16_t, uint16_t);
-
-/**
- * @brief Stop the PWM
- */
-void stop_pwm(void);
-
-/**
- * @brief Start the timer
- * @param autoreload Auto Reload Value
- */
-void start_timer(uint16_t);
-
-/**
- * @brief Stop the timer
- */
-void stop_timer(void);
-
-/**
- * @brief Write a byte to the UART
- * @param data Data to be written
- * @return Status of the transmission
- */
-enum UART_STATUS uart_write(uint8_t);
-
-/**
- * @brief Read a byte from the UART
- * @return Data read
- */
-uint8_t uart_read(void);
-
-/**
- * Initialize timer with interrupts for turn indicators
- */
-void initialize_timer(void);
-
-/**
- * Initialize the EXTI for the buttons (SW1, SW2, SW3 and SW4)
- */
-void initialize_exti_buttons(void);
-
-/**
- * Initialize the ADC for the fuel indicator
- */
-void initialize_adc(void);
-
-/**
- * @brief Handles the ignition key
- */
-void ignition_handler(void);
-
-/**
- * @brief Handles the left turn switch
- */
-void left_turn_handler(void);
-
-/**
- * @brief Handles the right turn switch
- */
-void right_turn_handler(void);
-
-/**
- * @brief Handles the head light switch
- */
-void head_light_handler(void);
-
-/**
- * Sets the turn indicator status
- * @param status The status of the turn indicator
- * @note If parking mode is ON, the turn indicators are unavailable
- */
-void set_turn_indicator(enum TURN_INDICATOR_STATUS);
-
-/**
- * Sets the headlight status
- * @param status The status of the headlight
- * @note If the turn indicators are ON, the parking mode is unavailable
- */
-void set_head_light(enum HEAD_LIGHT_STATUS);
-
-/**
- * Sets the fuel indicator status
- * @param status The status of the fuel indicator
- */
-void set_ignition(enum ENGINE_STATUS);
-
-void set_mode(enum ECU_MODE new_mode)
-{
-    mode = new_mode;
-}
-
-void initialize_ecu(void)
-{
-    if (mode == LCD_ON)
-    {
-        /**
-         * Initialize the LCD
-         */
-        lcd_init(BIT_4_MODE);
-        lcd_print(0, 0, "Initializing");
-        lcd_print(0, 1, "Please Wait!");
-    }
-
-    /**
-     * Enable the clock for GPIOA, GPIOB and GPIOC
-     */
-    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN;
-
-    /**
-     * Configure the modes for the GPIO ports (Switches, LEDs, Buzzer and Potentiometer)
-     */
-    set_input(IGNITION_KEY_PORT, IGNITION_KEY_PIN);           // Ignition Key
-    set_input(LEFT_TURN_SWITCH_PORT, LEFT_TURN_SWITCH_PIN);   // Left Turn Switch
-    set_input(RIGHT_TURN_SWITCH_PORT, RIGHT_TURN_SWITCH_PIN); // Right Turn Switch
-    set_input(HEAD_LIGHT_SWITCH_PORT, HEAD_LIGHT_SWITCH_PIN); // Head Light Switch
-    set_analog(FUEL_INDICATOR_PORT, FUEL_INDICATOR_PIN);      // Fuel Indicator
-
-    if (mode == LCD_OFF)
-    {
-        set_output(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Ignition LED
-        set_output(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);   // Left Turn Lamp
-        set_output(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Right Turn Lamp
-        set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);        // Head Light
-        set_output(BUZZER_PORT, BUZZER_PIN);                   // Buzzer
-
-        set_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Turn OFF the Ignition LED
-        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);   // Turn OFF the Left Turn Lamp
-        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Turn OFF the Right Turn Lamp
-        clr_bit(BUZZER_PORT, BUZZER_PIN);                   // Turn OFF the Buzzer
-
-        initialize_pwm();
-        initialize_timer();
-    }
-    initialize_uart();
-    initialize_exti_buttons();
-    initialize_adc();
-
-    if (mode == LCD_ON)
-    {
-        set_lcd_mode(CLEAR_SCREEN);
-        lcd_print(0, 0, "C:OFF L:OFF U:OF");
-        lcd_print(0, 1, "F:000% T:OFF");
-    }
-}
-
 void initialize_uart(void)
 {
     /**
@@ -208,6 +45,46 @@ void initialize_uart(void)
     UART4->CR1 |= USART_CR1_UE | USART_CR1_TE | USART_CR1_RE; // Enable the UART, Transmitter and Receiver
 }
 
+/**
+ * @brief Set the ignition status
+ * @param status The status of the ignition
+ */
+void set_uart_status(enum UART_STATUS status)
+{
+    if (engine_status == ENGINE_OFF)
+    {
+        return;
+    }
+    enum UART_STATUS prev_value = uart_status;
+    uart_status = status;
+    if (mode == LCD_ON && prev_value != status)
+    {
+        switch (status)
+        {
+        case UART_OFF:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OF");
+            break;
+
+        case UART_OK:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OK");
+            break;
+
+        case UART_NOT_OK:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "ER");
+            break;
+
+        default:
+            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "??");
+            break;
+        }
+    }
+}
+
+/**
+ * @brief Write a byte to the UART
+ * @param data Data to be written
+ * @return Status of the transmission
+ */
 enum UART_STATUS uart_write(uint8_t data)
 {
     uint32_t counter = 0;
@@ -224,6 +101,10 @@ enum UART_STATUS uart_write(uint8_t data)
     return UART_OK;
 }
 
+/**
+ * @brief Read a byte from the UART
+ * @return Data read
+ */
 uint8_t uart_read(void)
 {
     uint32_t counter = 0;
@@ -266,37 +147,9 @@ void uart_signal_check(void)
     }
 }
 
-void set_uart_status(enum UART_STATUS status)
-{
-    if (engine_status == ENGINE_OFF)
-    {
-        return;
-    }
-    enum UART_STATUS prev_value = uart_status;
-    uart_status = status;
-    if (mode == LCD_ON && prev_value != status)
-    {
-        switch (status)
-        {
-        case UART_OFF:
-            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OF");
-            break;
-
-        case UART_OK:
-            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "OK");
-            break;
-
-        case UART_NOT_OK:
-            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "ER");
-            break;
-
-        default:
-            lcd_print(UART_STATUS_POS, UART_STATUS_LINE, "??");
-            break;
-        }
-    }
-}
-
+/**
+ * @brief Initialize the PWM for Head Light
+ */
 void initialize_pwm(void)
 {
     GPIOC->AFR[0] |= (0x1 << 25); // Set AF2 for PC6 (TIM3_CH1)
@@ -312,12 +165,20 @@ void initialize_pwm(void)
     TIM3->CR1 |= TIM_CR1_CEN;                           // Enable the counterr
 }
 
+/**
+ * @brief Set the duty cycle for the PWM
+ * @param duty_cycle Duty Cycle (0 - 1000)
+ * @param frequency Frequency (Hz)
+ */
 void start_pwm(uint16_t duty_cycle, uint16_t frequency)
 {
     TIM3->CCR1 = (duty_cycle * ((TIM3->ARR) + 1)) / 100; // Set the duty cycle
     TIM3->ARR = (TIM_FREQ / frequency) - 1;              // Set the auto-reload register
 }
 
+/**
+ * @brief Stop the PWM
+ */
 void stop_pwm()
 {
     TIM3->ARR = 0x3E8; // Set the auto-reload register to 1000
@@ -325,6 +186,9 @@ void stop_pwm()
     TIM3->CNT = 0;
 }
 
+/**
+ * Initialize timer with interrupts for turn indicators
+ */
 void initialize_timer(void)
 {
     RCC->APB1ENR |= RCC_APB1ENR_TIM2EN; // Enable the clock for TIM2
@@ -337,18 +201,28 @@ void initialize_timer(void)
     *NVIC_ISER0 |= (1 << 28);                               // Enable the TIM2 global interrupt
 }
 
+/**
+ * @brief Start the timer
+ * @param autoreload Auto Reload Value
+ */
 void start_timer(uint16_t autoreload)
 {
     TIM2->ARR = autoreload - 1; // Set the auto-reload register
     TIM2->CR1 |= TIM_CR1_CEN;   // Enable the counter
 }
 
+/**
+ * @brief Stop the timer
+ */
 void stop_timer(void)
 {
     TIM2->CR1 &= ~TIM_CR1_CEN; // Disable the counter
     TIM2->CNT = 0;
 }
 
+/**
+ * Initialize the ADC for the fuel indicator
+ */
 void initialize_adc(void)
 {
     RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable the clock for ADC1
@@ -418,6 +292,273 @@ void TIM2_IRQHandler()
     }
 }
 
+/**
+ * Sets the turn indicator status
+ * @param status The status of the turn indicator
+ * @note If parking mode is ON, the turn indicators are unavailable
+ */
+void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
+{
+    if (status == TURN_INDICATOR_OFF)
+    {
+        turn_indicator_status = TURN_INDICATOR_OFF;
+        if (mode == LCD_OFF)
+        {
+            stop_timer();
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
+        }
+        else
+        {
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "OFF  ");
+        }
+    }
+    else if (status == TURN_INDICATOR_LEFT)
+    {
+        turn_indicator_status = TURN_INDICATOR_LEFT;
+        if (mode == LCD_OFF)
+        {
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
+            start_timer(1000);
+        }
+        else
+        {
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "LEFT ");
+        }
+    }
+    else if (status == TURN_INDICATOR_RIGHT)
+    {
+        turn_indicator_status = TURN_INDICATOR_RIGHT;
+        if (mode == LCD_OFF)
+        {
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
+            start_timer(1000);
+        }
+        else
+        {
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "RIGHT");
+        }
+    }
+    else if (status == PARKING_LIGHT_ON)
+    {
+        turn_indicator_status = PARKING_LIGHT_ON;
+        if (mode == LCD_OFF)
+        {
+            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
+            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
+            clr_bit(BUZZER_PORT, BUZZER_PIN);
+            start_timer(250);
+        }
+        else
+        {
+            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "PARK ");
+        }
+    }
+}
+
+/**
+ * Sets the headlight status
+ * @param status The status of the headlight
+ * @note If the turn indicators are ON, the parking mode is unavailable
+ */
+void set_head_light(enum HEAD_LIGHT_STATUS status)
+{
+    if (status == HEAD_LIGHT_OFF)
+    {
+        if (mode == LCD_OFF)
+        {
+            stop_pwm();
+        }
+        else
+        {
+            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "OFF");
+        }
+        headlight_status = HEAD_LIGHT_OFF;
+    }
+    else if (status == HEAD_LIGHT_LOW_BEAM)
+    {
+        headlight_status = HEAD_LIGHT_LOW_BEAM;
+        if (mode == LCD_ON)
+        {
+            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "LOW");
+        }
+        else
+        {
+            start_pwm(10, 10000); // PWM with 10% duty cycle
+        }
+    }
+    else if (status == HEAD_LIGHT_HIGH_BEAM)
+    {
+        headlight_status = HEAD_LIGHT_HIGH_BEAM;
+        if (mode == LCD_ON)
+        {
+            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "HI ");
+        }
+        else
+        {
+            stop_pwm();
+            start_pwm(90, 10000); // PWM with 90% duty cycle
+        }
+    }
+}
+
+/**
+ * Sets the fuel indicator status
+ * @param status The status of the fuel indicator
+ */
+void set_ignition(enum ENGINE_STATUS status)
+{
+    if (status == ENGINE_ON)
+    {
+        engine_status = ENGINE_ON;
+        if (mode == LCD_ON)
+        {
+            lcd_print(ENGINE_STATUS_POS, ENGINE_STATUS_LINE, "ON ");
+        }
+        else
+        {
+            clr_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);
+        }
+    }
+    else if (status == ENGINE_OFF)
+    {
+        engine_status = ENGINE_OFF;
+        if (mode == LCD_ON)
+        {
+            lcd_print(ENGINE_STATUS_POS, ENGINE_STATUS_LINE, "OFF");
+        }
+        else
+        {
+            set_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);
+        }
+    }
+}
+
+/**
+ * @brief Handles the ignition key
+ */
+void ignition_handler(void)
+{
+    if (EXTI->PR & EXTI_PR_PR3)
+    {
+        if (engine_status == ENGINE_OFF)
+        {
+            set_ignition(ENGINE_ON);
+            set_uart_status(UART_OK);
+        }
+        else if (engine_status == ENGINE_ON)
+        {
+            set_uart_status(UART_OFF);
+            set_turn_indicator(TURN_INDICATOR_OFF);
+            set_head_light(HEAD_LIGHT_OFF);
+            set_ignition(ENGINE_OFF);
+        }
+
+        EXTI->PR |= EXTI_PR_PR3; // Clear the pending bit
+    }
+}
+
+/**
+ * @brief Handles the left turn switch
+ */
+void left_turn_handler(void)
+{
+    if (EXTI->PR & EXTI_PR_PR4)
+    {
+        if (engine_status == ENGINE_OFF)
+        {
+            EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
+            return;
+        }
+
+        if (turn_indicator_status == TURN_INDICATOR_LEFT)
+        {
+            set_turn_indicator(TURN_INDICATOR_OFF);
+        }
+        else
+        {
+            set_turn_indicator(TURN_INDICATOR_LEFT);
+        }
+
+        EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
+    }
+}
+
+/**
+ * @brief Handles the right turn switch
+ */
+void right_turn_handler(void)
+{
+    if (EXTI->PR & EXTI_PR_PR7)
+    {
+        if (engine_status == ENGINE_OFF)
+        {
+            EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
+            return;
+        }
+
+        if (turn_indicator_status == TURN_INDICATOR_RIGHT)
+        {
+            set_turn_indicator(TURN_INDICATOR_OFF);
+        }
+        else
+        {
+            set_turn_indicator(TURN_INDICATOR_RIGHT);
+        }
+
+        EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
+    }
+}
+
+/**
+ * @brief Handles the head light switch
+ */
+void head_light_handler(void)
+{
+    if (EXTI->PR & EXTI_PR_PR15)
+    {
+        if (engine_status == ENGINE_OFF)
+        {
+            EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
+            return;
+        }
+        if (headlight_status == HEAD_LIGHT_OFF)
+        {
+            set_head_light(HEAD_LIGHT_LOW_BEAM);
+        }
+        else if (headlight_status == HEAD_LIGHT_LOW_BEAM)
+        {
+            set_head_light(HEAD_LIGHT_HIGH_BEAM);
+        }
+        else if (headlight_status == HEAD_LIGHT_HIGH_BEAM)
+        {
+            if (turn_indicator_status == TURN_INDICATOR_OFF)
+            {
+                set_turn_indicator(PARKING_LIGHT_ON);
+            }
+            else if (turn_indicator_status == PARKING_LIGHT_ON)
+            {
+                set_head_light(HEAD_LIGHT_OFF);
+                set_turn_indicator(TURN_INDICATOR_OFF);
+            }
+            else
+            {
+                set_head_light(HEAD_LIGHT_OFF);
+            }
+        }
+
+        EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
+    }
+}
+
+/**
+ * Initialize the EXTI for the buttons (SW1, SW2, SW3 and SW4)
+ */
 void initialize_exti_buttons(void)
 {
     RCC->APB2ENR |= RCC_APB2ENR_SYSCFGEN; // Enable the clock for SYSCFG
@@ -486,239 +627,61 @@ void EXTI15_10_IRQHandler(void)
     head_light_handler();
 }
 
-void ignition_handler(void)
+void set_mode(enum ECU_MODE new_mode)
 {
-    if (EXTI->PR & EXTI_PR_PR3)
-    {
-        if (engine_status == ENGINE_OFF)
-        {
-            set_ignition(ENGINE_ON);
-            set_uart_status(UART_OK);
-        }
-        else if (engine_status == ENGINE_ON)
-        {
-            set_uart_status(UART_OFF);
-            set_turn_indicator(TURN_INDICATOR_OFF);
-            set_head_light(HEAD_LIGHT_OFF);
-            set_ignition(ENGINE_OFF);
-        }
-
-        EXTI->PR |= EXTI_PR_PR3; // Clear the pending bit
-    }
+    mode = new_mode;
 }
 
-void left_turn_handler(void)
+void initialize_ecu(void)
 {
-    if (EXTI->PR & EXTI_PR_PR4)
+    if (mode == LCD_ON)
     {
-        if (engine_status == ENGINE_OFF)
-        {
-            EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
-            return;
-        }
+        /**
+         * Initialize the LCD
+         */
+        lcd_init(BIT_4_MODE);
+        lcd_print(0, 0, "Initializing");
+        lcd_print(0, 1, "Please Wait!");
+    }
 
-        if (turn_indicator_status == TURN_INDICATOR_LEFT)
-        {
-            set_turn_indicator(TURN_INDICATOR_OFF);
-        }
-        else
-        {
-            set_turn_indicator(TURN_INDICATOR_LEFT);
-        }
+    /**
+     * Enable the clock for GPIOA, GPIOB and GPIOC
+     */
+    RCC->AHB1ENR |= RCC_AHB1ENR_GPIOAEN | RCC_AHB1ENR_GPIOBEN | RCC_AHB1ENR_GPIOCEN;
 
-        EXTI->PR |= EXTI_PR_PR4; // Clear the pending bit
-    }
-}
-void right_turn_handler(void)
-{
-    if (EXTI->PR & EXTI_PR_PR7)
-    {
-        if (engine_status == ENGINE_OFF)
-        {
-            EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
-            return;
-        }
+    /**
+     * Configure the modes for the GPIO ports (Switches, LEDs, Buzzer and Potentiometer)
+     */
+    set_input(IGNITION_KEY_PORT, IGNITION_KEY_PIN);           // Ignition Key
+    set_input(LEFT_TURN_SWITCH_PORT, LEFT_TURN_SWITCH_PIN);   // Left Turn Switch
+    set_input(RIGHT_TURN_SWITCH_PORT, RIGHT_TURN_SWITCH_PIN); // Right Turn Switch
+    set_input(HEAD_LIGHT_SWITCH_PORT, HEAD_LIGHT_SWITCH_PIN); // Head Light Switch
+    set_analog(FUEL_INDICATOR_PORT, FUEL_INDICATOR_PIN);      // Fuel Indicator
 
-        if (turn_indicator_status == TURN_INDICATOR_RIGHT)
-        {
-            set_turn_indicator(TURN_INDICATOR_OFF);
-        }
-        else
-        {
-            set_turn_indicator(TURN_INDICATOR_RIGHT);
-        }
+    if (mode == LCD_OFF)
+    {
+        set_output(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Ignition LED
+        set_output(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);   // Left Turn Lamp
+        set_output(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Right Turn Lamp
+        set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);        // Head Light
+        set_output(BUZZER_PORT, BUZZER_PIN);                   // Buzzer
 
-        EXTI->PR |= EXTI_PR_PR7; // Clear the pending bit
-    }
-}
+        set_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Turn OFF the Ignition LED
+        set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);   // Turn OFF the Left Turn Lamp
+        set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Turn OFF the Right Turn Lamp
+        clr_bit(BUZZER_PORT, BUZZER_PIN);                   // Turn OFF the Buzzer
 
-void head_light_handler(void)
-{
-    if (EXTI->PR & EXTI_PR_PR15)
-    {
-        if (engine_status == ENGINE_OFF)
-        {
-            EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
-            return;
-        }
-        if (headlight_status == HEAD_LIGHT_OFF)
-        {
-            set_head_light(HEAD_LIGHT_LOW_BEAM);
-        }
-        else if (headlight_status == HEAD_LIGHT_LOW_BEAM)
-        {
-            set_head_light(HEAD_LIGHT_HIGH_BEAM);
-        }
-        else if (headlight_status == HEAD_LIGHT_HIGH_BEAM)
-        {
-            if (turn_indicator_status == TURN_INDICATOR_OFF)
-            {
-                set_turn_indicator(PARKING_LIGHT_ON);
-            }
-            else if (turn_indicator_status == PARKING_LIGHT_ON)
-            {
-                set_head_light(HEAD_LIGHT_OFF);
-                set_turn_indicator(TURN_INDICATOR_OFF);
-            }
-            else
-            {
-                set_head_light(HEAD_LIGHT_OFF);
-            }
-        }
+        initialize_pwm();
+        initialize_timer();
+    }
+    initialize_uart();
+    initialize_exti_buttons();
+    initialize_adc();
 
-        EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
-    }
-}
-
-void set_ignition(enum ENGINE_STATUS status)
-{
-    if (status == ENGINE_ON)
+    if (mode == LCD_ON)
     {
-        engine_status = ENGINE_ON;
-        if (mode == LCD_ON)
-        {
-            lcd_print(ENGINE_STATUS_POS, ENGINE_STATUS_LINE, "ON ");
-        }
-        else
-        {
-            clr_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);
-        }
-    }
-    else if (status == ENGINE_OFF)
-    {
-        engine_status = ENGINE_OFF;
-        if (mode == LCD_ON)
-        {
-            lcd_print(ENGINE_STATUS_POS, ENGINE_STATUS_LINE, "OFF");
-        }
-        else
-        {
-            set_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);
-        }
-    }
-}
-
-void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
-{
-    if (status == TURN_INDICATOR_OFF)
-    {
-        turn_indicator_status = TURN_INDICATOR_OFF;
-        if (mode == LCD_OFF)
-        {
-            stop_timer();
-            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            clr_bit(BUZZER_PORT, BUZZER_PIN);
-        }
-        else
-        {
-            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "OFF  ");
-        }
-    }
-    else if (status == TURN_INDICATOR_LEFT)
-    {
-        turn_indicator_status = TURN_INDICATOR_LEFT;
-        if (mode == LCD_OFF)
-        {
-            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            clr_bit(BUZZER_PORT, BUZZER_PIN);
-            start_timer(1000);
-        }
-        else
-        {
-            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "LEFT ");
-        }
-    }
-    else if (status == TURN_INDICATOR_RIGHT)
-    {
-        turn_indicator_status = TURN_INDICATOR_RIGHT;
-        if (mode == LCD_OFF)
-        {
-            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            clr_bit(BUZZER_PORT, BUZZER_PIN);
-            start_timer(1000);
-        }
-        else
-        {
-            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "RIGHT");
-        }
-    }
-    else if (status == PARKING_LIGHT_ON)
-    {
-        turn_indicator_status = PARKING_LIGHT_ON;
-        if (mode == LCD_OFF)
-        {
-            set_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
-            set_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
-            clr_bit(BUZZER_PORT, BUZZER_PIN);
-            start_timer(250);
-        }
-        else
-        {
-            lcd_print(TURN_STATUS_POS, TURN_STATUS_LINE, "PARK ");
-        }
-    }
-}
-
-void set_head_light(enum HEAD_LIGHT_STATUS status)
-{
-    if (status == HEAD_LIGHT_OFF)
-    {
-        if (mode == LCD_OFF)
-        {
-            stop_pwm();
-        }
-        else
-        {
-            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "OFF");
-        }
-        headlight_status = HEAD_LIGHT_OFF;
-    }
-    else if (status == HEAD_LIGHT_LOW_BEAM)
-    {
-        headlight_status = HEAD_LIGHT_LOW_BEAM;
-        if (mode == LCD_ON)
-        {
-            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "LOW");
-        }
-        else
-        {
-            start_pwm(10, 10000); // PWM with 10% duty cycle
-        }
-    }
-    else if (status == HEAD_LIGHT_HIGH_BEAM)
-    {
-        headlight_status = HEAD_LIGHT_HIGH_BEAM;
-        if (mode == LCD_ON)
-        {
-            lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "HI ");
-        }
-        else
-        {
-            stop_pwm();
-            start_pwm(90, 10000); // PWM with 90% duty cycle
-        }
+        set_lcd_mode(CLEAR_SCREEN);
+        lcd_print(0, 0, "C:OFF L:OFF U:OF");
+        lcd_print(0, 1, "F:000% T:OFF");
     }
 }
