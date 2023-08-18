@@ -669,13 +669,19 @@ void EXTI15_10_IRQHandler(void)
     head_light_handler();
 }
 
+/**
+ * Sets the mode of working
+ * @param mode The mode of working
+ */
 void set_mode(enum ECU_MODE new_mode)
 {
     mode = new_mode;
 }
 
-void initialize_ecu(void)
+void initialize_ecu(enum ECU_MODE ecu_mode)
 {
+    set_mode(ecu_mode);
+
     if (mode == LCD_ON)
     {
         /**

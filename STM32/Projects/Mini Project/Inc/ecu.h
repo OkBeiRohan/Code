@@ -191,24 +191,19 @@ enum UART_STATUS
 };
 
 /**
- * Initializes the ECU
- * Sets the GPIO pins for the ignition key, turn indicators, headlight and fuel indicator
- * Sets the UART for communication with the dashboard
- * Sets the ADC for reading the fuel level
- * Sets the timer for the turn indicator
+ * Initializes the ECU.
+ * Sets the GPIO pins for the ignition key, turn indicators, headlight and fuel indicator.
+ * Sets the UART for communication with the dashboard.
+ * Sets the ADC for reading the fuel level.
+ * Sets the timer for the turn indicator.
+ * @param ecu_mode The mode of working (LCD_ON or LCD_OFF)
  */
-void initialize_ecu(void);
+void initialize_ecu(enum ECU_MODE ecu_mode);
 
 /**
  * Transmit and receive data via UART
  */
 void uart_signal_check(void);
-
-/**
- * Sets the mode of working
- * @param mode The mode of working
- */
-void set_mode(enum ECU_MODE);
 
 /**
  * Checks the status of the fuel indicator

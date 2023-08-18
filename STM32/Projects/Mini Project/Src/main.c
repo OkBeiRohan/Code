@@ -21,8 +21,7 @@
 
 int main(void)
 {
-  set_mode(LCD_ON);
-  initialize_ecu();
+  initialize_ecu(LCD_ON);
 
   while (1)
   {
