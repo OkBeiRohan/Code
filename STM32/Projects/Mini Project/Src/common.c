@@ -345,11 +345,11 @@ void lcd_print_int(uint8_t position, uint8_t line, uint32_t dval, uint8_t print_
 
     if (print_leading_zero)
     {
-        sprintf(str, "%03d", dval);
+        sprintf(str, "%03d", (int)dval);
     }
     else
     {
-        sprintf(str, "%d", dval);
+        sprintf(str, "%d", (int)dval);
     }
 
     lcd_print(position, line, str);

@@ -182,6 +182,7 @@ enum HEADLIGHT_STATUS
  * Status of the UART transmission
  * OK: The transferred data is successfully received
  * NOTOK: The transferred data is corrupted or lost
+ * OFF: The UART is turned OFF
  */
 enum UART_STATUS
 {
