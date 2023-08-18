@@ -60,15 +60,15 @@
  * The GPIO port and pin for the headlight
  * LED1 (PC6)
  */
-#define HEAD_LIGHT_PORT GPIOC
-#define HEAD_LIGHT_PIN 6
+#define HEADLIGHT_PORT GPIOC
+#define HEADLIGHT_PIN 6
 
 /**
  * The GPIO port and pin for the headlight switch
  * SW4 (PA15)
  */
-#define HEAD_LIGHT_SWITCH_PORT GPIOA
-#define HEAD_LIGHT_SWITCH_PIN 15
+#define HEADLIGHT_SWITCH_PORT GPIOA
+#define HEADLIGHT_SWITCH_PIN 15
 
 /**
  * The GPIO port and pin for the fuel indicator
@@ -171,11 +171,11 @@ enum TURN_INDICATOR_STATUS
  * LOW: Headlights are dimmed (Low intensity)
  * HIGH: Headlights are bright (High intensity)
  */
-enum HEAD_LIGHT_STATUS
+enum HEADLIGHT_STATUS
 {
-    HEAD_LIGHT_OFF,
-    HEAD_LIGHT_LOW_BEAM,
-    HEAD_LIGHT_HIGH_BEAM,
+    HEADLIGHT_OFF,
+    HEADLIGHT_LOW_BEAM,
+    HEADLIGHT_HIGH_BEAM,
 };
 
 /**

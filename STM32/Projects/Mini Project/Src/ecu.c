@@ -28,7 +28,7 @@ enum UART_STATUS uart_status = UART_OFF;
 /**
  * @brief The status of the headlight
  */
-enum HEAD_LIGHT_STATUS headlight_status = HEAD_LIGHT_OFF;
+enum HEADLIGHT_STATUS headlight_status = HEADLIGHT_OFF;
 
 /**
  * @brief The status of the turn indicator
@@ -257,7 +257,7 @@ void initialize_adc(void)
 {
     RCC->APB2ENR |= RCC_APB2ENR_ADC1EN; // Enable the clock for ADC1
     ADC1->CR2 = 0;                      // Disable the ADC
-    ADC1->SQR3 |= (0xC << 0);           // Set the 13th channel as the first conversion in the regular sequence
+    ADC1->SQR3 |= (0xC << 0);           // Set the 1st channel as the first conversion in the regular sequence
     ADC1->SQR1 = 0;                     // Set the length of the regular sequence to 1 conversion
     ADC1->CR2 = 1;                      // Enable the ADC
 }
@@ -398,9 +398,9 @@ void set_turn_indicator(enum TURN_INDICATOR_STATUS status)
  * @param status The status of the headlight
  * @note If the turn indicators are ON, the parking mode is unavailable
  */
-void set_head_light(enum HEAD_LIGHT_STATUS status)
+void set_head_light(enum HEADLIGHT_STATUS status)
 {
-    if (status == HEAD_LIGHT_OFF)
+    if (status == HEADLIGHT_OFF)
     {
         if (mode == LCD_OFF)
         {
@@ -410,11 +410,11 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
         {
             lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "OFF");
         }
-        headlight_status = HEAD_LIGHT_OFF;
+        headlight_status = HEADLIGHT_OFF;
     }
-    else if (status == HEAD_LIGHT_LOW_BEAM)
+    else if (status == HEADLIGHT_LOW_BEAM)
     {
-        headlight_status = HEAD_LIGHT_LOW_BEAM;
+        headlight_status = HEADLIGHT_LOW_BEAM;
         if (mode == LCD_ON)
         {
             lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "LOW");
@@ -424,9 +424,9 @@ void set_head_light(enum HEAD_LIGHT_STATUS status)
             start_pwm(10, 10000); // PWM with 10% duty cycle
         }
     }
-    else if (status == HEAD_LIGHT_HIGH_BEAM)
+    else if (status == HEADLIGHT_HIGH_BEAM)
     {
-        headlight_status = HEAD_LIGHT_HIGH_BEAM;
+        headlight_status = HEADLIGHT_HIGH_BEAM;
         if (mode == LCD_ON)
         {
             lcd_print(LIGHT_STATUS_POS, LIGHT_STATUS_LINE, "HI ");
@@ -487,7 +487,7 @@ void ignition_handler(void)
         {
             set_uart_status(UART_OFF);
             set_turn_indicator(TURN_INDICATOR_OFF);
-            set_head_light(HEAD_LIGHT_OFF);
+            set_head_light(HEADLIGHT_OFF);
             set_ignition(ENGINE_OFF);
         }
 
@@ -550,7 +550,7 @@ void right_turn_handler(void)
 /**
  * @brief Handles the head light switch
  */
-void head_light_handler(void)
+void HEADLIGHT_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR15)
     {
@@ -559,15 +559,15 @@ void head_light_handler(void)
             EXTI->PR |= EXTI_PR_PR15; // Clear the pending bit
             return;
         }
-        if (headlight_status == HEAD_LIGHT_OFF)
+        if (headlight_status == HEADLIGHT_OFF)
         {
-            set_head_light(HEAD_LIGHT_LOW_BEAM);
+            set_head_light(HEADLIGHT_LOW_BEAM);
         }
-        else if (headlight_status == HEAD_LIGHT_LOW_BEAM)
+        else if (headlight_status == HEADLIGHT_LOW_BEAM)
         {
-            set_head_light(HEAD_LIGHT_HIGH_BEAM);
+            set_head_light(HEADLIGHT_HIGH_BEAM);
         }
-        else if (headlight_status == HEAD_LIGHT_HIGH_BEAM)
+        else if (headlight_status == HEADLIGHT_HIGH_BEAM)
         {
             if (turn_indicator_status == TURN_INDICATOR_OFF)
             {
@@ -575,12 +575,12 @@ void head_light_handler(void)
             }
             else if (turn_indicator_status == PARKING_LIGHT_ON)
             {
-                set_head_light(HEAD_LIGHT_OFF);
+                set_head_light(HEADLIGHT_OFF);
                 set_turn_indicator(TURN_INDICATOR_OFF);
             }
             else
             {
-                set_head_light(HEAD_LIGHT_OFF);
+                set_head_light(HEADLIGHT_OFF);
             }
         }
 
@@ -668,7 +668,7 @@ void EXTI9_5_IRQHandler(void)
  */
 void EXTI15_10_IRQHandler(void)
 {
-    head_light_handler();
+    HEADLIGHT_handler();
 }
 
 /**
@@ -705,7 +705,7 @@ void initialize_ecu(enum ECU_MODE ecu_mode)
     set_input(IGNITION_KEY_PORT, IGNITION_KEY_PIN);           // Ignition Key
     set_input(LEFT_TURN_SWITCH_PORT, LEFT_TURN_SWITCH_PIN);   // Left Turn Switch
     set_input(RIGHT_TURN_SWITCH_PORT, RIGHT_TURN_SWITCH_PIN); // Right Turn Switch
-    set_input(HEAD_LIGHT_SWITCH_PORT, HEAD_LIGHT_SWITCH_PIN); // Head Light Switch
+    set_input(HEADLIGHT_SWITCH_PORT, HEADLIGHT_SWITCH_PIN);   // Head Light Switch
     set_analog(FUEL_INDICATOR_PORT, FUEL_INDICATOR_PIN);      // Fuel Indicator
 
     if (mode == LCD_OFF)
@@ -713,7 +713,7 @@ void initialize_ecu(enum ECU_MODE ecu_mode)
         set_output(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Ignition LED
         set_output(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);   // Left Turn Lamp
         set_output(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN); // Right Turn Lamp
-        set_alternate(HEAD_LIGHT_PORT, HEAD_LIGHT_PIN);        // Head Light
+        set_alternate(HEADLIGHT_PORT, HEADLIGHT_PIN);          // Head Light
         set_output(BUZZER_PORT, BUZZER_PIN);                   // Buzzer
 
         set_bit(IGNITION_LED_PORT, IGNITION_LED_PIN);       // Turn OFF the Ignition LED
