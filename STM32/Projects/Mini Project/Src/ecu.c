@@ -81,13 +81,13 @@ void initialize_uart(void)
  */
 void set_uart_status(enum UART_STATUS status)
 {
-    if (engine_status == ENGINE_OFF)
+    if (engine_status == ENGINE_OFF) // If the engine is OFF, the UART status is always OFF
     {
         return;
     }
-    enum UART_STATUS prev_value = uart_status;
-    uart_status = status;
-    if (mode == LCD_ON && prev_value != status)
+    enum UART_STATUS prev_value = uart_status;  // Store the previous value of the UART status
+    uart_status = status;                       // Set the new value of the UART status
+    if (mode == LCD_ON && prev_value != status) // If the mode is LCD_ON and the previous value is not equal to the new value, print the status on the LCD
     {
         switch (status)
         {
@@ -124,11 +124,11 @@ enum UART_STATUS uart_write(uint8_t data)
         if (counter >= 10000)
         {
             UART4->DR = 0;
-            return UART_NOT_OK;
+            return UART_NOT_OK; // Return UART_NOT_OK if the transmission is not complete
         }
         counter++;
     };
-    return UART_OK;
+    return UART_OK; // Return UART_OK if the transmission is complete
 }
 
 /**
@@ -142,7 +142,7 @@ uint8_t uart_read(void)
     {
         if (counter >= 10000)
         {
-            return 0x0;
+            return 0x0; // Return 0 if the receive timeout occurs
         }
         counter++;
     };                // Wait for the receive buffer to be empty
@@ -151,18 +151,18 @@ uint8_t uart_read(void)
 
 void uart_signal_check(void)
 {
-    if (uart_status == UART_OFF || engine_status == ENGINE_OFF)
+    if (uart_status == UART_OFF || engine_status == ENGINE_OFF) // If the UART is OFF or the engine is OFF, return
     {
         return;
     }
 
     enum UART_STATUS tx_status;
-    tx_status = uart_write((uint8_t)UART_TRANSMIT_DATA);
-    if (tx_status == UART_OK)
+    tx_status = uart_write((uint8_t)UART_TRANSMIT_DATA); // Transmit the data
+    if (tx_status == UART_OK)                            // If the transmission is successful, read the data
     {
         uart_data = uart_read();
     }
-    else
+    else // If the transmission is not successful, set the data to 0
     {
         uart_data = 0;
     }
@@ -213,7 +213,7 @@ void stop_pwm()
 {
     TIM3->ARR = 0x3E8; // Set the auto-reload register to 1000
     TIM3->CCR1 = 0x0;  // Set the duty cycle to 0
-    TIM3->CNT = 0;
+    TIM3->CNT = 0;     // Set the counter to 0
 }
 
 /**
@@ -247,7 +247,7 @@ void start_timer(uint16_t autoreload)
 void stop_timer(void)
 {
     TIM2->CR1 &= ~TIM_CR1_CEN; // Disable the counter
-    TIM2->CNT = 0;
+    TIM2->CNT = 0;             // Set the counter to 0
 }
 
 /**
@@ -265,7 +265,7 @@ void initialize_adc(void)
 void check_fuel_status()
 {
     uint32_t counter = 0;
-    if (engine_status == ENGINE_OFF)
+    if (engine_status == ENGINE_OFF) // If the engine is OFF, set the fuel level to 0
     {
         if (fuel_level != 0)
         {
@@ -282,43 +282,45 @@ void check_fuel_status()
     {
         if (counter >= 10000)
         {
-            return;
-            counter = 0;
+            return; // Return if the conversion got timed out
         }
         counter++;
     };
-    uint8_t fuel_range_changed = 0;                       // Flag to check if the fuel range has changed
-    uint8_t curr_level = ((ADC1->DR) / 10) * 100 / 409.5; // Read the converted value
-    fuel_range_changed = (curr_level != fuel_level) ? 1 : 0;
-    fuel_level = curr_level; // Read the converted value
-    if (mode == LCD_ON && fuel_range_changed == 1)
+    uint8_t fuel_range_changed = 0;                          // Flag to check if the fuel range has changed
+    uint8_t curr_level = ((ADC1->DR) / 10) * 100 / 409.5;    // Read the converted value
+    fuel_range_changed = (curr_level != fuel_level) ? 1 : 0; // Check if the fuel range has changed
+    fuel_level = curr_level;                                 // Read the converted value
+    if (mode == LCD_ON && fuel_range_changed == 1)           // If the mode is LCD_ON and the fuel range has changed, print the fuel level on the LCD
     {
         lcd_print_int(FUEL_LEVEL_POS, FUEL_LEVEL_LINE, fuel_level, 1);
     }
 }
 
+/**
+ * @brief Handles the timer interrupt for the turn indicators
+ */
 void TIM2_IRQHandler()
 {
-    if (TIM2->SR & TIM_SR_UIF)
+    if (TIM2->SR & TIM_SR_UIF) // If the update interrupt flag is set
     {
-        if (turn_indicator_status == TURN_INDICATOR_LEFT)
+        if (turn_indicator_status == TURN_INDICATOR_LEFT) // If the turn indicator is LEFT, toggle the LEFT_TURN_LAMP and BUZZER
         {
             cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             cpl_bit(BUZZER_PORT, BUZZER_PIN);
         }
-        else if (turn_indicator_status == TURN_INDICATOR_RIGHT)
+        else if (turn_indicator_status == TURN_INDICATOR_RIGHT) // If the turn indicator is RIGHT, toggle the RIGHT_TURN_LAMP and BUZZER
         {
             cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
             cpl_bit(BUZZER_PORT, BUZZER_PIN);
         }
-        else if (turn_indicator_status == PARKING_LIGHT_ON)
+        else if (turn_indicator_status == PARKING_LIGHT_ON) // If the turn indicator is PARKING_LIGHT_ON, toggle the LEFT_TURN_LAMP, RIGHT_TURN_LAMP and BUZZER
         {
             cpl_bit(LEFT_TURN_LAMP_PORT, LEFT_TURN_LAMP_PIN);
             cpl_bit(RIGHT_TURN_LAMP_PORT, RIGHT_TURN_LAMP_PIN);
             cpl_bit(BUZZER_PORT, BUZZER_PIN);
         }
 
-        TIM2->SR &= ~TIM_SR_UIF;
+        TIM2->SR &= ~TIM_SR_UIF; // Clear the update interrupt flag
     }
 }
 
@@ -476,12 +478,12 @@ void ignition_handler(void)
 {
     if (EXTI->PR & EXTI_PR_PR3)
     {
-        if (engine_status == ENGINE_OFF)
+        if (engine_status == ENGINE_OFF) // If the engine is OFF, turn ON the engine and enable UART
         {
             set_ignition(ENGINE_ON);
             set_uart_status(UART_OK);
         }
-        else if (engine_status == ENGINE_ON)
+        else if (engine_status == ENGINE_ON) // If the engine is ON, turn OFF the engine and all the peripherals
         {
             set_uart_status(UART_OFF);
             set_turn_indicator(TURN_INDICATOR_OFF);

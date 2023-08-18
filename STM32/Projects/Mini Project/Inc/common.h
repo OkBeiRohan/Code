@@ -11,19 +11,19 @@
 #include "stm32f4xx.h"
 
 /**
- * Register Select
+ * Register Select for LCD
  */
 #define PORT_RS GPIOA
 #define PIN_RS 0
 
 /**
- * LCD Enable
+ * LCD Enable Pin
  */
 #define PORT_EN GPIOA
 #define PIN_EN 1
 
 /**
- * Data Pins
+ * Data Pins for LCD
  */
 #define PORT_D0 GPIOC
 #define PIN_D0 4
@@ -52,6 +52,9 @@
 #define true 1
 #define false 0
 
+/**
+ * @brief LCD Modes
+ */
 enum lcd_modes
 {
     CLEAR_SCREEN,
@@ -69,19 +72,101 @@ enum lcd_modes
     BIT_4_MODE,
 };
 
-void set_output(GPIO_TypeDef *, uint32_t); // gpio->MODER
-void set_input(GPIO_TypeDef *, uint32_t);
-void set_analog(GPIO_TypeDef *, uint32_t);
-void set_pull_up(GPIO_TypeDef *, uint32_t);
-void set_alternate(GPIO_TypeDef *, uint32_t);
-void set_bit(GPIO_TypeDef *, uint32_t); // gpio->ODR|=(1<<pin)
-void clr_bit(GPIO_TypeDef *, uint32_t);
-void cpl_bit(GPIO_TypeDef *, uint32_t);
-void delay(uint32_t);
+/**
+ * @brief Configure a GPIO pin as output
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void set_output(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Configure a GPIO pin as input
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void set_input(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Configure a GPIO pin as analog
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void set_analog(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Configure a GPIO pin as pull-up
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void set_pull_up(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Configure a GPIO pin as pull-down
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void set_alternate(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Set the value of a GPIO pin as 1
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void set_bit(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Reset the value of a GPIO pin (Set as 0)
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void clr_bit(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Toggle the value of a GPIO pin
+ * @param gpio GPIO port
+ * @param pin GPIO pin
+ */
+void cpl_bit(GPIO_TypeDef *gpio, uint32_t pin);
+
+/**
+ * @brief Software delay
+ * @param delay_ms Delay in milliseconds
+ */
+void delay(uint32_t delay_ms);
+
+/**
+ * @brief Initialize the LCD
+ */
 void lcd_init(enum lcd_modes bit_operation);
-void lcd_fn(uint8_t, uint8_t);
+
+/**
+ * @brief Send a command to the LCD
+ * @param is_command 1 if the data is a command, 0 if the data is a character
+ * @param value The command to be sent
+ */
+void lcd_fn(uint8_t is_command, uint8_t value);
+
+/**
+ * @brief Print a string to the LCD
+ * @param position The position of the cursor
+ * @param line The line of the cursor
+ * @param str The string to be printed
+ */
 void lcd_print(uint8_t position, uint8_t line, char *str);
+
+/**
+ * @brief Print an integer to the LCD
+ * @param position The position of the cursor
+ * @param line The line of the cursor
+ * @param dval The integer to be printed
+ * @param print_leading_zero 1 if leading zeros should be printed, 0 if not
+ */
 void lcd_print_int(uint8_t position, uint8_t line, uint32_t dval, uint8_t print_leading_zero);
+
+/**
+ * @brief Set the mode of the LCD
+ * @param mode The mode to be set
+ */
 void set_lcd_mode(enum lcd_modes mode);
 
 #endif /* LCD_H_ */

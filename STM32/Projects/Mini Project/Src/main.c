@@ -21,7 +21,7 @@
 
 int main(void)
 {
-  initialize_ecu(LCD_ON);
+  initialize_ecu(LCD_ON); // Initialize ECU with LCD ON
 
   while (1)
   {

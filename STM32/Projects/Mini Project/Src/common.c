@@ -19,7 +19,14 @@
 #include <common.h>
 #include <stdio.h>
 
-uint8_t enable_8_bit;
+/**
+ * @brief LCD Modes
+ */
+enum ENABLE_8_BIT
+{
+    ENABLED_8_BIT,
+    ENABLED_4_BIT
+} enable_8_bit;
 
 void set_output(GPIO_TypeDef *gpio, uint32_t pin)
 {
@@ -74,15 +81,15 @@ void delay(uint32_t delay_ms)
             ;
 }
 
-void lcd_init(enum lcd_modes bit_8)
+void lcd_init(enum lcd_modes bit_operation)
 {
-    if (bit_8 == BIT_4_MODE)
+    if (bit_operation == BIT_4_MODE)
     {
-        enable_8_bit = 0;
+        enable_8_bit = ENABLED_4_BIT;
     }
     else
     {
-        enable_8_bit = 1;
+        enable_8_bit = ENABLED_8_BIT;
     }
 
     /**
@@ -97,7 +104,7 @@ void lcd_init(enum lcd_modes bit_8)
     set_output(PORT_RS, PIN_RS);
     set_output(PORT_EN, PIN_EN);
 
-    if (enable_8_bit)
+    if (enable_8_bit == ENABLED_8_BIT)
     {
         set_output(PORT_D0, PIN_D0);
         set_output(PORT_D1, PIN_D1);
@@ -112,11 +119,21 @@ void lcd_init(enum lcd_modes bit_8)
     /**
      * Initialize the LCD
      */
-    lcd_fn(0, 0x33);
-    lcd_fn(0, 0x32);
-    lcd_fn(0, 0x28);
-    lcd_fn(0, 0x0c);
-    lcd_fn(0, 0x01);
+    if (enable_8_bit == ENABLED_8_BIT)
+    {
+        lcd_fn(0, 0x01);
+        lcd_fn(0, 0x38);
+        lcd_fn(0, 0x06);
+        lcd_fn(0, 0x0C);
+    }
+    else
+    {
+        lcd_fn(0, 0x33);
+        lcd_fn(0, 0x32);
+        lcd_fn(0, 0x28);
+        lcd_fn(0, 0x0c);
+        lcd_fn(0, 0x01);
+    }
 }
 
 void lcd_fn(uint8_t is_command, uint8_t value)
@@ -157,7 +174,7 @@ void lcd_fn(uint8_t is_command, uint8_t value)
         clr_bit(PORT_D4, PIN_D4);
     }
 
-    if (enable_8_bit)
+    if (enable_8_bit == ENABLED_8_BIT)
     {
         if (value & (1 << 3))
         {
@@ -216,7 +233,7 @@ void lcd_fn(uint8_t is_command, uint8_t value)
     clr_bit(PORT_EN, PIN_EN);
     delay(1);
 
-    if (enable_8_bit == 0)
+    if (enable_8_bit == ENABLED_4_BIT)
     {
         if (value & (1 << 3))
         {
@@ -322,9 +339,6 @@ void set_lcd_mode(enum lcd_modes mode)
     }
 }
 
-/**
- * Print an integer to the LCD
- */
 void lcd_print_int(uint8_t position, uint8_t line, uint32_t dval, uint8_t print_leading_zero)
 {
     char str[16];
